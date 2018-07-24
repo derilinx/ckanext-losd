@@ -1,0 +1,73 @@
+<div role="main" id="front-page-hero" class="hero-unit">
+  <div class="container">
+    <div class="row row1">
+        {% block promoted %}
+          {% snippet 'home/snippets/promoted.html' %}
+        {% endblock %}
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-3 span3">
+        <div class="card card1">
+            <i class="fa fa-cogs card-icon"></i>
+            <p>Data converion using Juma</p>
+        </div>
+    </div>
+            <div class="col-md-3 span3">
+        <div class="card card2">
+            <a href="http://losd.staging.derilinx.com:8890" target="_blank">
+              <i class="fa fa-search card-icon"></i>
+              <p>Advanced Search using Virtuoso</p>
+            </a>
+        </div>
+    </div>
+            <div class="col-md-3 span3">
+        <div class="card card3">
+            <i class="fa fa-bar-chart card-icon"></i>
+            <p>Data Visualization and Analysis </p>
+        </div>
+    </div>
+            <div class="col-md-3 span3">
+        <div class="card card4">
+          <a href="http://losd.staging.derilinx.com/moodle" target="_blank">
+            <i class="fa fa-book card-icon"></i>
+            <p>Learning Platform</p>
+          </a>
+        </div>
+    </div>
+  </div>
+</div>
+  <div class="container">
+    <div class="row row3">
+      <div class="col-md-6 span6 col1">
+        {% set org_1 = h.get_organization('central-statistics-office-ireland',include_datasets=True) %}
+        <div class="box">
+          {% snippet 'snippets/organization_item.html', organization=org_1, truncate=50, truncate_title=35 %}
+        </div>
+      </div>
+      <div class="col-md-6 span6 col2">
+        {% set org_2 = h.get_organization('national-institute-of-statistics-and-economic-studies-france',include_datasets=True) %}
+        <div class="box">
+          {% snippet 'snippets/organization_item.html', organization=org_2, truncate=50, truncate_title=35 %}
+        </div>
+      </div>
+    </div>
+    <div class="row row4">
+      <div class="col-md-6 span6 col1" style="margin-top:20px;">
+        {% set org_3 = h.get_organization('istituto-nazionale-di-statistica',include_datasets=True) %}
+        <div class="box">
+          {% snippet 'snippets/organization_item.html', organization=org_3, truncate=50, truncate_title=35 %}
+        </div>
+      </div>
+      <div class="col-md-6 span6 col2" style="margin-top:20px;">
+        {% set org_4 = h.get_organization('national-statistical-institute-bulgaria',include_datasets=True) %}
+        <div class="box">
+          {% snippet 'snippets/organization_item.html', organization=org_4, truncate=50, truncate_title=35 %}
+        </div>
+      </div>
+    </div>
+  </div>
+

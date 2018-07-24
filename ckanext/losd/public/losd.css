@@ -1,0 +1,258 @@
+html,
+button,
+input,
+select,
+textarea {
+    color: #222;
+}
+body {
+    background: #fff;
+    color: #4d4d4f;
+    font-family: 'Questrial';
+    font-style: normal;
+    min-width: 1000px;
+    -webkit-font-smoothing: antialiased;
+}
+
+::-moz-selection {
+    background: #b3d4fc;
+    text-shadow: none;
+}
+
+::selection {
+    background: #b3d4fc;
+    text-shadow: none;
+}
+
+hr {
+    display: block;
+    height: 1px;
+    border: 0;
+    border-top: 1px solid #ccc;
+    margin: 1em 0;
+    padding: 0;
+}
+
+img {
+    vertical-align: middle;
+}
+
+fieldset {
+    border: 0;
+    margin: 0;
+    padding: 0;
+}
+
+textarea {
+    resize: vertical;
+}
+
+a {
+    color: #13b5ea;
+    text-decoration: none;
+}
+
+a:hover {
+    color: #40beb3;
+    text-decoration: underline;
+}
+
+p {
+    font-size: 15px; /*15px*/
+    line-height: 22px; /* 22px */
+    margin: 0px 0px 20px;
+}
+
+p strong {
+    font-family: 'Questrial';
+    font-weight: 500;
+}
+
+/* MAIN NAV */
+
+header nav {
+    clear: both;
+    padding: 10px 0px 0px 0px;
+}
+
+header nav ul {
+    text-align: center;
+}
+
+header nav li {
+    display: block;
+    float: right;
+}
+
+header nav li a {
+    color: #fff !important;
+    display: block;
+    float: left;
+    font: 700 1em/1.125em 'Montserrat'; /*16px/18px*/
+    letter-spacing: -1px;
+    margin: 0px 0px 0px 14px;
+    padding: 0px 19px 0px 19px;
+    text-transform: uppercase;
+    -webkit-transition: all 0.1s linear;
+    -moz-transition: all 0.1s linear;
+    transition: all 0.1s linear;
+    font-weight: bold;
+}
+
+header nav li a:hover, header nav li a:active {
+    color: #fff !important;
+    text-decoration: none;
+}
+
+header nav li a:focus {
+    color: #fff !important;
+    outline: none;
+}
+
+header nav li:first-child a {
+    margin-left: 0px;
+}
+
+
+/* header */
+
+.masthead {
+    min-height: 55px;
+    color: #111;
+    margin-bottom: initial;
+    padding: 10px 0;
+    background: #1F4A86;
+}
+.account-masthead {
+    min-height: 20px;
+    color: #ffffff !important;
+    background: #29649D !important;
+}
+
+#brand-logo{
+   height: 90px;
+}
+
+/* Cards */
+
+.card-icon {
+    color: #fff;
+    font-size: 35px;
+}
+
+.card {
+    border-radius: 4px;
+    background-color: #FFF;
+    text-align: center;
+vertical-align: middle !important;
+    height: 110px;
+    /*margin-top: 20px;*/
+    padding-top: 20px;
+    margin-bottom: 20px;
+}
+
+.card:hover {
+  border: 1px solid #ced3d9;
+  background: #e1e4e8;
+  cursor: pointer;
+}
+.card h4 {
+    font-family: 'Montserrat';
+    text-transform: uppercase;
+    font-weight: 800;
+    margin-bottom: 20px;
+}
+
+.card p {
+    font-size: 16px;
+    font-family: "Questrial";
+    color: #FFF
+
+}
+
+.card1 {
+    background-color: #006FC4;
+}
+
+.card2 {
+    background-color: #005A98;
+}
+
+.card3 {
+    background-color: #005A98;
+}
+.card4 {
+    background-color: #0B4180;
+}
+
+.card-primary button {
+    margin-bottom: 36px;
+}
+
+.card-secondary button {
+    margin-bottom: 36px;
+}
+
+/* OTHER */
+
+[role=main] {
+  min-height: 200px;
+ background: #fff;
+}
+.module-image{
+  height: 100;
+}
+
+.module-heading {
+    background-color: #DBE9F9;
+}
+
+.home-heading{
+height: 80px
+}
+
+.box ul {
+    height: 200px; 
+    overflow-y: scroll;
+}
+
+.page-heading {
+ font-size: 45px;
+}
+#front-page-hero {
+    /*margin-top: -260px;*/
+    background-image: url(/img/stats.jpg);
+    background-size: cover;
+    background-color: #aaa;
+    background-blend-mode: multiply;
+    border-radius: 0px;
+}
+
+/* Footer */
+
+.footer {
+    background: #F2F7FF;
+    padding: 25px 0px;
+    margin-top: 30px;
+}
+
+.footer #ckan-logo, #derilinx-logo{
+  height: 16px;
+}
+.footer a {
+    color: #000000 !important;
+    font: 700 1em/1.125em 'Montserrat'; /*16px/18px*/
+    letter-spacing: -1px;
+    margin: 0px 0px 0px 14px;
+    padding: 0px 19px 0px 19px;
+    text-transform: uppercase;
+    -webkit-transition: all 0.1s linear;
+    -moz-transition: all 0.1s linear;
+    transition: all 0.1s linear;
+}
+
+.footer #partners-logo {
+  height: 80px;
+}
+
+ 

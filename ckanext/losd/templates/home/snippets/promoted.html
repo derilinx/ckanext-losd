@@ -1,0 +1,15 @@
+{% set intro = g.site_intro_text %}
+
+<div class="module-content box">
+  <header>
+    {% if intro %}
+      {{ h.render_markdown(intro) }}
+    {% else %}
+      <h1 class="page-heading">{{ _("Welcome to Linked Open Statistical Data Hub") }}</h1>
+      <p>
+        {% trans %}This data hub is a catalog of datasets and resources used in the Linked Open Statistical Data project. From this site you can access datasets, Linked Data tools and training materials.
+        {% endtrans %}
+      </p>
+    {% endif %}
+  </header>
+</div>
