@@ -1,0 +1,30 @@
+{% ckan_extends %}
+
+{% macro url_item(route, label) %}
+  {% set url = h.url_for(route) %}
+  <a href="{{ url }}" >{{ label }}</a>
+{% endmacro %}
+
+
+
+{% block resource_actions_inner %}
+
+  {% set action = h.url_for(controller='ckanext.losd.controllers.converters:CSVConverter', action='convertToCSV', id=pkg.name, pkg_id=pkg.name, resource_id=res.id) %}
+
+    {{super()}}
+        {% if h.supported_format(res.format) and h.check_access('package_update', {'id':pkg.id }) %}
+
+<li><form method="post" action="{{ action }}" >
+    <button class="btn btn-success" name="save" type="submit">
+      <i class="fa fa-file"></i> {{ _('Convert to CSV') }}
+    </button>
+  </form></li>
+
+    {% endif %}
+
+{% endblock %}
+
+
+
+
+
