@@ -9,6 +9,7 @@ import ckan.lib.helpers as h
 import os
 import urllib2
 import pycurl
+import json
 
 _ = tk._
 c = tk.c
@@ -216,3 +217,271 @@ class CSVConverter(BaseController):
                        id=id, resource_id=resource_id)
 
 
+class JsonStatConverter(BaseController):
+
+    def namespace_vocabspace_validator(self, string):
+
+        ''' To validate the the namespace and vocabulary space links if it dosent ends with "\" '''
+
+        if list(string)[-1] != "/":
+            string = string + "/"
+
+        return string
+
+    def convertToRDF(self):
+        losd = LocalCKAN()
+
+        try:
+
+            resource_id = request.params.get('resource_id', u'')
+            datasetid = request.params.get('datasetId', u'')
+            vocabulary_namespace = request.params.get('VocabNmSpace', u'')
+            data_namespace = request.params.get('DataNmSpace', u'')
+
+            # Add "/" at the end of data_namespace if not present.
+            vocabulary_namespace = self.namespace_vocabspace_validator(vocabulary_namespace)
+            data_namespace = self.namespace_vocabspace_validator(data_namespace) + datasetid +"/"
+
+            resource_jsonstat = losd.action.resource_show(id=resource_id)
+
+            Source_URL = resource_jsonstat['url']
+
+            scheme = '@prefix qb: <http://purl.org/linked-data/cube#> .\n@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .\n@prefix skos: <http://www.w3.org/2004/02/skos/core#> .\n@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .\n@prefix prov: <http://www.w3.org/ns/prov#> .\n@prefix dc: <http://purl.org/dc/elements/1.1/> .\n\n#SCHEME\n\n'
+            code_list = '#CODELIST\n\n'
+            observations = '#OBSERVATIONS\n\n'
+
+            filename = '/var/lib/ckan/storage/uploads/' + unicode(uuid.uuid4()) + '.ttl'
+
+            # read from json-stat
+            with open(filename, 'w') as out_file:
+                json1 = json.loads(urllib2.urlopen(Source_URL).read())
+                #json1 = json.loads(Source_URL)
+
+
+                try:
+                    #####Generating Scheme#####
+                    n1 = len(json1['dataset']['dimension']['id'])
+
+                    ##Scheme: Individual terms
+                    for a in range(n1):
+                        this1 = json1['dataset']['dimension']['id'][a]
+                        this2 = this1.replace(" ", "_").lower()
+                        scheme += '<' + vocabulary_namespace + this2 + '> a qb:ComponentProperty, qb:DimensionProperty ;\n\trdfs:label "' + this2 + '" ;\n\trdfs:range xsd:string .\n\n'
+
+                    scheme += '<' + vocabulary_namespace + 'value> a qb:ComponentProperty, qb:MeasureProperty ;\n\trdfs:label "value" ;\n\trdfs:range xsd:float .\n\n'
+
+                    ##Scheme: DSD
+                    dataset = json1['dataset']['label'].replace(" ", "_").lower()
+
+                    scheme += '<' + data_namespace + dataset + '_dsd> a qb:DataStructureDefinition ;\n\tqb:component\n\t\t[ a qb:ComponentSpecification ;\n\t\t  qb:codeList <' + data_namespace + 'conceptscheme/measureType> ; \n\t\t  qb:dimension qb:measureType ;\n\t\t  qb:order 1 \n\t] ;\n\tqb:component [ qb:measure <' + vocabulary_namespace + 'value> ] ;\n\t'
+
+                    for a in range(n1):
+                        this1 = json1['dataset']['dimension']['id'][a]
+                        this2 = this1.replace(" ", "_").lower()
+                        scheme += 'qb:component\n\t\t[ a qb:ComponentSpecification ;\n\t\t  qb:codeList <' + data_namespace + 'conceptscheme/' + this2 + '> ;\n\t\t  qb:dimension <' + vocabulary_namespace + this2 + '> ;\n\t\t  qb:order ' + str(
+                            a + 2) + ' \n\t\t] '
+                        if a == n1 - 1:
+                            scheme += '\n.\n\n'
+                        else:
+                            scheme += ';\n\t'
+
+                    ##Scheme: Dataset
+                    scheme += '<' + data_namespace + dataset + '_dataset> a qb:DataSet ;\n\tqb:structure <' + data_namespace + dataset + '_dsd> ;\n\trdfs:label "' + \
+                              json1['dataset']['label'] + '" ; \n\tprov:generatedAtTime "' + json1['dataset'][
+                                  'updated'] + '"^^xsd:dateTime ;\n\tdc:creator "' + json1['dataset']['source'] + '" .\n\n'
+
+                    #####Generating Codelist#####
+
+                    ##Codelist: Conceptscheme
+                    for a in range(n1):
+                        this1 = json1['dataset']['dimension']['id'][a]
+                        this2 = this1.replace(" ", "_").lower()
+                        code_list += '<' + data_namespace + 'conceptscheme/' + this2 + '> a skos:ConceptScheme ;\n\t'
+
+                        keys = json1['dataset']['dimension'][json1['dataset']['dimension']['id'][a]]['category']['index'].keys()
+
+                        cnt = 0
+
+                        for k in keys:
+                            concept = \
+                            json1['dataset']['dimension'][json1['dataset']['dimension']['id'][a]]['category']['label'][k]
+                            concept = concept.replace(" ", "_").lower()
+                            code_list += 'skos:member <' + data_namespace + 'concept/' + this2 + '/' + concept + '> '
+                            if cnt == len(keys) - 1:
+                                code_list += '.\n\n'
+                            else:
+                                code_list += ';\n\t'
+                            cnt += 1
+
+                    ##Codelist: Concepts
+                    for a in range(n1):
+                        this1 = json1['dataset']['dimension']['id'][a]
+                        this2 = this1.replace(" ", "_").lower()
+
+                        keys = json1['dataset']['dimension'][json1['dataset']['dimension']['id'][a]]['category']['index'].keys()
+
+                        for k in keys:
+                            concept = \
+                            json1['dataset']['dimension'][json1['dataset']['dimension']['id'][a]]['category']['label'][k]
+                            concept2 = concept.replace(" ", "_").lower()
+                            code_list += '<' + data_namespace + 'concept/' + this2 + '/' + concept2 + '> a skos:Concept ;\n\trdfs:label "' + concept + '" .\n\n'
+
+                    #####Generating Observations#####
+
+                    all_term = []
+
+
+                    for a in range(n1):
+                        keys = json1['dataset']['dimension'][json1['dataset']['dimension']['id'][a]]['category']['index'].keys()
+                        labels = []
+
+                        for k in keys:
+                            concept = \
+                            json1['dataset']['dimension'][json1['dataset']['dimension']['id'][a]]['category']['label'][k]
+                            concept2 = concept.replace(" ", "_").lower()
+                            labels.append(concept2)
+
+                        all_term.append(labels)
+
+                    size = json1['dataset']['dimension']['size']
+                    total_size = 1
+                    tracker = []
+
+                    for s in size:
+                        tracker.append(0)
+                        total_size *= s
+
+                    track_size = len(tracker)
+
+                    ##Observations: creating each
+
+                    for t in range(total_size):
+                        observations += '[ a qb:Observation ;\n\tqb:dataSet <' + data_namespace + dataset + '_dataset> ;\n\tqb:measureType <' + vocabulary_namespace + 'value> ;\n\t'
+
+                        for a in range(n1):
+                            this1 = json1['dataset']['dimension']['id'][a]
+                            this2 = this1.replace(" ", "_").lower()
+                            observations += '<' + vocabulary_namespace + this2 + '> '
+                            observations += '<' + data_namespace + 'concept/' + this2 + '/' + all_term[a][
+                                tracker[a]] + '> ;\n\t'
+
+                        tracker[track_size - 1] += 1
+
+                        for i in range(track_size - 1, -1, -1):
+                            if i != 0:
+                                if tracker[i] > size[i] - 1:
+                                    tracker[i] = 0
+                                    tracker[i - 1] += 1
+                            else:
+                                if tracker[i] > size[i] - 1:
+                                    tracker[i] = 0
+
+                        observations += 'qb:measureType <' + vocabulary_namespace + 'value> ;\n\t<' + vocabulary_namespace + 'value> "' + str(
+                            json1['dataset']['value'][t]) + '"^^xsd:float\n] . \n\n'
+
+                    out_file.write(scheme)
+                    out_file.write(code_list)
+                    out_file.write(observations)
+                    out_file.close()
+                except Exception as e:
+                    out_file.close()
+                    os.remove(filename)
+                    id = request.params.get('pkg_id', u'')
+                    h.flash_notice(_('Error: Please make sure the file that needs to be converted is a valid json-stat file.'))
+                    tk.redirect_to(controller='package', action='read',
+                                   id=id)
+
+
+            try:
+
+                losd.action.resource_create(
+                    package_id=request.params.get('pkg_id', u''),
+                    format='rdf',
+                    name='RDF ' + resource_jsonstat['name'],
+                    description='RDF file converted from Json-Stat resource: ' + resource_jsonstat['name'],
+                    upload=open(filename)
+                )
+            except Exception as e:
+                os.remove(filename)
+                id = request.params.get('pkg_id', u'')
+                h.flash_notice(_('Error: Something wrong while uploading the file.'))
+                tk.redirect_to(controller='package', action='read',
+                               id=id)
+
+            os.remove(filename)
+            id = request.params.get('pkg_id', u'')
+            h.flash_notice(_('A new RDF resource has been created.'))
+            tk.redirect_to(controller='package', action='read',
+                           id=id)
+
+        except NotFound:
+            id = request.params.get('pkg_id', u'')
+            h.flash_notice(_('Error: Something went wrong!'))
+            tk.redirect_to(controller='package', action='read',
+                           id=id)
+            print('not found')
+
+    def pushToRDFStore(self):
+        losd = LocalCKAN()
+        try:
+            resource_id = request.params.get('resource_id', u'')
+            resource_rdf = losd.action.resource_show(id=resource_id)
+            Source_URL = resource_rdf['url']
+            print('\n\n\n\n\n\n')
+            print
+            "Verification of the resource"
+            dlfile(Source_URL)
+            print('\n\n\n\n\n\n')
+            filename = local_file_to_use_for_RDFStore
+            filesize = os.path.getsize(filename)
+            print
+            filesize
+            print('\n\n\n\n\n\n')
+            # read from juma
+            rdfStoreURL = request.params.get('storeURL', u'')
+            rdfStoreUser = request.params.get('userName', u'')
+            rdfStorePass = request.params.get('password', u'')
+            graphIRI = request.params.get('graphIRI', u'')
+            push_url = rdfStoreURL + '/sparql-graph-crud-auth?graph-uri=' + graphIRI
+            print('\n\n\n\n\n\n')
+            print('URL to RDF store: ' + push_url)
+            print('\n\n\n\n\n\n')
+            if not os.path.exists(filename):
+                print
+                "Error: the file '%s' does not exist" % filename
+                raise SystemExit
+            c = pycurl.Curl()
+            c.setopt(c.POST, True)
+            print('user ===> ' + rdfStoreUser + ':' + rdfStorePass)
+            # c.setopt(pycurl.HTTPAUTH, pycurl.HTTPAUTH_BASIC)
+            c.setopt(pycurl.HTTPAUTH, pycurl.HTTPAUTH_DIGEST)
+            c.setopt(pycurl.USERPWD, rdfStoreUser + ':' + rdfStorePass)
+            c.setopt(pycurl.URL, push_url)
+            c.setopt(pycurl.UPLOAD, 1)
+            file = open(filename)
+            c.setopt(c.READDATA, file)
+            c.setopt(pycurl.POSTFIELDSIZE, filesize)
+            print('Setting parameters')
+            # Two versions with the same semantics here, but the filereader version
+            # is useful when you have to process the data which is read before returning
+            # c.setopt(pycurl.HTTPPOST, [("file1", (c.FORM_FILE, filename))])
+            # c.setopt(pycurl.READFUNCTION, open(filename, 'rb').read)
+            print('\n\n\n\n\n\n')
+            print('uploading')
+            c.setopt(c.VERBOSE, True)
+            c.perform()
+            c.close()
+            print('\n\n\n\n\n\n')
+            print('end uploading')
+            os.remove(filename)
+            id = request.params.get('pkg_id', u'')
+            resource_id = request.params.get('resource_id', u'')
+            h.flash_notice(_('This resource has been pushed to RDF store successfully.'))
+            tk.redirect_to(controller='package', action='resource_read',
+                           id=id, resource_id=resource_id)
+        except:
+            id = request.params.get('pkg_id', u'')
+            resource_id = request.params.get('resource_id', u'')
+            # h.flash_error(_('Error in pushing this resource to RDF store successfully.'))
+            tk.redirect_to(controller='package', action='resource_read',
+                           id=id, resource_id=resource_id)
