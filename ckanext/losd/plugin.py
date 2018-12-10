@@ -19,11 +19,13 @@ class LosdPlugin(SingletonPlugin):
 
     def get_helpers(self):
         return {
-            'supported_format': h.supported_format
+            'supported_rdf_format': h.supported_rdf_format
         }
 
     def before_map(self, map):
         map.connect('converttocsv', '/dataset/converttocsv/{id}', controller='ckanext.losd.controllers.converters:CSVConverter', action='convertToCSV')
+        map.connect('converttordf', '/dataset/converttordf/{id}', controller='ckanext.losd.controllers.converters:CSVConverter', action='convertToRDF')
+        map.connect('pushtordfstore', '/dataset/pushtordfstore/{id}', controller='ckanext.losd.controllers.converters:CSVConverter', action='pushToRDFStore')
         return map
 
     def after_map(self, map):

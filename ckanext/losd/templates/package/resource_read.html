@@ -10,9 +10,8 @@
 {% block resource_actions_inner %}
 
   {% set action = h.url_for(controller='ckanext.losd.controllers.converters:CSVConverter', action='convertToCSV', id=pkg.name, pkg_id=pkg.name, resource_id=res.id) %}
-
     {{super()}}
-        {% if h.supported_format(res.format) and h.check_access('package_update', {'id':pkg.id }) %}
+        {% if 'json-stat' in (res.format).lower() and h.check_access('package_update', {'id':pkg.id }) %}
 
 <li><form method="post" action="{{ action }}" >
     <button class="btn btn-success" name="save" type="submit">
@@ -26,5 +25,65 @@
 
 
 
+      {% block resource_content %}
+        {{super()}}
 
+        {% if 'csv' in (res.format).lower() and h.check_access('package_update', {'id':pkg.id }) %}
+<div class="module-content box">
+<h2> {{ _('Convert this resouce to RDF') }} </h2>
+	{% set actionRDF = h.url_for(controller='ckanext.losd.controllers.converters:CSVConverter', action='convertToRDF', id=pkg.name, pkg_id=pkg.name, resource_id=res.id) %}
+        <p>{{ _('You can convert this resource to RDF by giving the following details and clicking on the "Convert to RDF" button' ) }}</p>
+
+  <form method="post" action="{{ actionRDF }}" >
+	<div class="row">
+		<div class="col-md-3" style="text-align:right;">  {{ _(' Juma username:' ) }} </div>
+		<div class="col-md-3"><input type="text" name="jumaUser" value=""></div>
+	</div>
+	<div class="row">
+		<div class="col-md-3" style="text-align:right;"> {{ _('Juma mapping ID:') }} </div>
+		<div class="col-md-3"><input type="text" name="jumaMappingID" value=""></div>
+        </div>
+        <div class="row">
+                <div class="col-md-3" style="text-align:right;"> {{ _('Title of the new resource:') }} </div>
+                <div class="col-md-3"><input type="text" name="newResourceName" value=""></div>
+		<div class="col-md-3" style="text-align:left;">
+		 <button class="btn btn-success" name="save" type="submit"><i class="fa fa-file"></i> {{ _('Convert to RDF') }} </button>
+		</div>
+	</div>
+  </form>
+</div>
+    {% endif %}
+
+
+        {% if 'rdf' in (res.format).lower() and h.check_access('package_update', {'id':pkg.id }) %}
+<div class="module-content box">
+<h2> {{ _('Push this resource to RDF Store') }} </h2>
+        {% set actionPushToStore = h.url_for(controller='ckanext.losd.controllers.converters:CSVConverter', action='pushToRDFStore', id=pkg.name, pkg_id=pkg.name, resource_id=res.id) %}
+        <p>{{ _('You can push this resource to a Virtuoso RDF Store by giving the following details and clicking on the "Push to RDF Store" button' ) }}</p>
+
+  <form method="post" action="{{ actionPushToStore }}" >
+        <div class="row">
+                <div class="col-md-3" style="text-align:right;">  {{ _(' Virtuoso RDF Store URL:' ) }} </div>
+                <div class="col-md-3"><input type="text" name="storeURL" value=""></div>
+        </div>
+        <div class="row">
+                <div class="col-md-3" style="text-align:right;"> {{ _('User Name:') }} </div>
+                <div class="col-md-3"><input type="text" name="userName" value=""></div>
+        </div>
+        <div class="row">
+                <div class="col-md-3" style="text-align:right;"> {{ _('Password:') }} </div>
+                <div class="col-md-3"><input type="password" name="password" value=""></div>
+        </div>
+        <div class="row">
+                <div class="col-md-3" style="text-align:right;"> {{ _('Named Graph IRI:') }} </div>
+                <div class="col-md-3"><input type="text" name="graphIRI" value=""></div>
+                <div class="col-md-3" style="text-align:left;">
+                 <button class="btn btn-success" name="save" type="submit"><i class="fa fa-file"></i> {{ _('Push to RDF Store') }} </button>
+                </div>
+        </div>
+  </form>
+</div>
+    {% endif %}
+
+      {% endblock %}
 

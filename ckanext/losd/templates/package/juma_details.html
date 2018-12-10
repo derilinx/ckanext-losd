@@ -1,0 +1,24 @@
+{% extends "page.html" %}
+
+{% block subtitle %}{{ _("Juma details") }}{% endblock %}
+
+{% block maintag %}<div class="row" role="main">{% endblock %}
+
+{% block main_content %}
+  <section class="module col-md-6 col-md-offset-3">
+    <div class="module-content">
+      {% block form %}
+          {% set actionRDF = h.url_for(controller='ckanext.losd.controllers.converters:CSVConverter', action='convertToRDF', id=pkg.name, pkg_id=pkg.name, resource_id=res.id) %}
+        <p>{{ _('In order to do the CSV to RDF mapping you need to provide the following details: ) }}</p>
+        <p class="form-actions">
+          <form id='juma_details_form_action' action="{{ actionRDF }}" method="post">
+             Juma username: <input type="text" name="jumaUser" value=""><br>
+             Juma mapping ID: <input type="text" name="jumaMappingID" value=""><br>
+            <button class="btn btn-danger" type="submit" name="cancel" >{{ _('Cancel') }}</button>
+            <button class="btn btn-primary" type="submit" name="delete" >{{ _('Convert to RDF') }}</button>
+          </form>
+        </p>
+      {% endblock %}
+    </div>
+  </section>
+{% endblock %}
