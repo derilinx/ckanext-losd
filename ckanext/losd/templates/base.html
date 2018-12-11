@@ -5,3 +5,19 @@
 <link href="https://fonts.googleapis.com/css?family=Montserrat|Questrial|Barlow+Condensed|Barlow+Semi+Condensed" rel="stylesheet">
 <link rel="stylesheet" href="/losd.css" />
 {% endblock %}
+
+{% block scripts %}
+  {{ super() }}
+    <script type="text/javascript">
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-130725627-1']);
+      _gaq.push(['_gat._anonymizeIp']);
+      _gaq.push(['_setDomainName', 'losd-data.staging.derilinx.com']);
+      _gaq.push(['_trackPageview']);
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+    </script>
+{% endblock %}
