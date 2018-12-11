@@ -88,7 +88,7 @@
 {% if 'json-stat' in (res.format).lower() and h.check_access('package_update', {'id':pkg.id }) %}
 <div class="module-content box" id="jason_stat_to_rdf">
 <h2> {{ _('Convert this resouce to RDF') }} </h2>
-	{% set actionRDF = h.url_for(controller='ckanext.losd.controllers.converters:JsonStatConverter', action='convertToRDF', id=pkg.name, pkg_id=pkg.name, resource_id=res.id) %}
+	{% set actionRDF = h.url_for(controller='ckanext.losd.controllers.converters:JsonStatConverter', action='convertToRDFJobs', id=pkg.name, pkg_id=pkg.name, resource_id=res.id) %}
         <p>{{ _('You can convert this resource to RDF by giving the following details and clicking on the "Convert to RDF" button' ) }}</p>
 
   <form method="post" action="{{ actionRDF }}" >
