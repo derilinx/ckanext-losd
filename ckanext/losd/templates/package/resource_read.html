@@ -29,7 +29,7 @@
         {{super()}}
 
         {% if 'csv' in (res.format).lower() and h.check_access('package_update', {'id':pkg.id }) %}
-<div class="module-content box">
+<div class="module-content box" id="rdf_to_csv">
 <h2> {{ _('Convert this resouce to RDF') }} </h2>
 	{% set actionRDF = h.url_for(controller='ckanext.losd.controllers.converters:CSVConverter', action='convertToRDF', id=pkg.name, pkg_id=pkg.name, resource_id=res.id) %}
         <p>{{ _('You can convert this resource to RDF by giving the following details and clicking on the "Convert to RDF" button' ) }}</p>
@@ -56,7 +56,7 @@
 
 
         {% if 'rdf' in (res.format).lower() and h.check_access('package_update', {'id':pkg.id }) %}
-<div class="module-content box">
+<div class="module-content box" id="push_resource_rdfstore">
 <h2> {{ _('Push this resource to RDF Store') }} </h2>
         {% set actionPushToStore = h.url_for(controller='ckanext.losd.controllers.converters:CSVConverter', action='pushToRDFStore', id=pkg.name, pkg_id=pkg.name, resource_id=res.id) %}
         <p>{{ _('You can push this resource to a Virtuoso RDF Store by giving the following details and clicking on the "Push to RDF Store" button' ) }}</p>
@@ -81,6 +81,33 @@
                  <button class="btn btn-success" name="save" type="submit"><i class="fa fa-file"></i> {{ _('Push to RDF Store') }} </button>
                 </div>
         </div>
+  </form>
+</div>
+    {% endif %}
+
+{% if 'json-stat' in (res.format).lower() and h.check_access('package_update', {'id':pkg.id }) %}
+<div class="module-content box" id="jason_stat_to_rdf">
+<h2> {{ _('Convert this resouce to RDF') }} </h2>
+	{% set actionRDF = h.url_for(controller='ckanext.losd.controllers.converters:JsonStatConverter', action='convertToRDF', id=pkg.name, pkg_id=pkg.name, resource_id=res.id) %}
+        <p>{{ _('You can convert this resource to RDF by giving the following details and clicking on the "Convert to RDF" button' ) }}</p>
+
+  <form method="post" action="{{ actionRDF }}" >
+	<div class="row">
+		<div class="col-md-3" style="text-align:right;">  {{ _(' Dataset Id:' ) }} </div>
+		<div class="col-md-3"><input type="text" name="datasetId" required="required" pattern="[A-Za-z0-9_-]{1,40}" title="No special characters are allowed!" value=""></div>
+
+	</div>
+	<div class="row">
+		<div class="col-md-3" style="text-align:right;"> {{ _('Vocabulary Namespace:') }} </div>
+		<div class="col-md-3"><input type="url" required="required" name="VocabNmSpace" value=""></div>
+        </div>
+        <div class="row">
+                <div class="col-md-3" style="text-align:right;"> {{ _('Dataspace Namespace:') }} </div>
+                <div class="col-md-3"><input type="url" required="required" name="DataNmSpace" value=""></div>
+		<div class="col-md-3" style="text-align:left;">
+		 <button class="btn btn-success" name="save" type="submit"><i class="fa fa-file"></i> {{ _('Convert to RDF') }} </button>
+		</div>
+	</div>
   </form>
 </div>
     {% endif %}

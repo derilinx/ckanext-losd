@@ -26,6 +26,7 @@ class LosdPlugin(SingletonPlugin):
         map.connect('converttocsv', '/dataset/converttocsv/{id}', controller='ckanext.losd.controllers.converters:CSVConverter', action='convertToCSV')
         map.connect('converttordf', '/dataset/converttordf/{id}', controller='ckanext.losd.controllers.converters:CSVConverter', action='convertToRDF')
         map.connect('pushtordfstore', '/dataset/pushtordfstore/{id}', controller='ckanext.losd.controllers.converters:CSVConverter', action='pushToRDFStore')
+        map.connect('jsonstattordf', '/dataset/jsonstattordf/{id}', controller='ckanext.losd.controllers.converters:JsonStatConverter', action='convertToRDF')
         return map
 
     def after_map(self, map):
