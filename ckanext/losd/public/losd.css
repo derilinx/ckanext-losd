@@ -258,3 +258,10 @@ height: 80px
 .module-content {
     margin-bottom: 20px;
 }
+
+#update_org {
+    margin-top: 30px;
+    background-color: #005A98;
+    border-color: #005A98;
+
+}
