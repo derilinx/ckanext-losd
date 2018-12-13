@@ -9,7 +9,11 @@
         {% endblock %}
 
         {% block organization_item_header_title %}
-          <h3 class="media-heading"><a href={{ url }}>{{ organization.title or organization.name }}</a></h3>
+            {% if organization.title or organization.name %}
+              <h3 class="media-heading"><a href={{ url }}>{{ organization.title or organization.name }}</a></h3>
+            {% else %}
+              <h3 class="media-heading"><a href="#">{{ 'No Organization Selected' }}</a></h3>
+            {% endif %}
         {% endblock %}
 
         {% block organization_item_header_description %}
@@ -19,6 +23,8 @@
             {% else %}
               <p>{{ h.markdown_extract(organization.description, truncate)|urlize }}</p>
             {% endif %}
+          {% else %}
+            <p>Please select the organization from drop down.</p>
           {% endif %}
         {% endblock %}
 

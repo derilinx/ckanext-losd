@@ -321,18 +321,20 @@ def convertToRDF(resource_id, datasetid, vocabulary_namespace, data_namespace, p
         # Add "/" at the end of data_namespace if not present.
         vocabulary_namespace = namespace_vocabspace_validator(vocabulary_namespace)
         data_namespace = namespace_vocabspace_validator(data_namespace) + datasetid +"/"
+        vocabulary_namespace_prefix = "csov"
+        data_namespace_prefix = "csod"
 
         resource_jsonstat = losd.action.resource_show(id=resource_id)
 
         Source_URL = resource_jsonstat['url']
 
-        scheme = '@prefix qb: <http://purl.org/linked-data/cube#> .\n@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .\n@prefix skos: <http://www.w3.org/2004/02/skos/core#> .\n@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .\n@prefix prov: <http://www.w3.org/ns/prov#> .\n@prefix dc: <http://purl.org/dc/elements/1.1/> .\n\n#SCHEME\n\n'
+        scheme = '@prefix qb: <http://purl.org/linked-data/cube#> .\n@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .\n@prefix skos: <http://www.w3.org/2004/02/skos/core#> .\n@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .\n@prefix prov: <http://www.w3.org/ns/prov#> .\n@prefix dc: <http://purl.org/dc/elements/1.1/> .\n@prefix ' + vocabulary_namespace_prefix + ': <' + vocabulary_namespace + '> .\n@prefix ' + data_namespace_prefix + ': <' + data_namespace + '> .\n\n#SCHEME\n\n'
         code_list = '#CODELIST\n\n'
         observations = '#OBSERVATIONS\n\n'
 
         filename = '/var/lib/ckan/storage/uploads/' + unicode(uuid.uuid4()) + '.ttl'
+
         if os.path.isfile(filename):
-            print("***************************")
             os.remove(filename)
 
         # read from json-stat
@@ -349,19 +351,19 @@ def convertToRDF(resource_id, datasetid, vocabulary_namespace, data_namespace, p
                 for a in range(n1):
                     this1 = json1['dataset']['dimension']['id'][a]
                     this2 = this1.replace(" ", "_").lower()
-                    scheme += '<' + vocabulary_namespace + this2 + '> a qb:ComponentProperty, qb:DimensionProperty ;\n\trdfs:label "' + this2 + '" ;\n\trdfs:range xsd:string .\n\n'
+                    scheme += '' + vocabulary_namespace_prefix + ':' + this2 + ' a qb:ComponentProperty, qb:DimensionProperty ;\n\trdfs:label "' + this1 + '" ;\n\trdfs:range xsd:string .\n\n'
 
-                scheme += '<' + vocabulary_namespace + 'value> a qb:ComponentProperty, qb:MeasureProperty ;\n\trdfs:label "value" ;\n\trdfs:range xsd:float .\n\n'
+                scheme += '' + vocabulary_namespace_prefix + ':value a qb:ComponentProperty, qb:MeasureProperty ;\n\trdfs:label "value" ;\n\trdfs:range xsd:float .\n\n'
 
                 ##Scheme: DSD
                 dataset = json1['dataset']['label'].replace(" ", "_").lower()
 
-                scheme += '<' + data_namespace + dataset + '_dsd> a qb:DataStructureDefinition ;\n\tqb:component\n\t\t[ a qb:ComponentSpecification ;\n\t\t  qb:codeList <' + data_namespace + 'conceptscheme/measureType> ; \n\t\t  qb:dimension qb:measureType ;\n\t\t  qb:order 1 \n\t] ;\n\tqb:component [ qb:measure <' + vocabulary_namespace + 'value> ] ;\n\t'
+                scheme += '' + data_namespace_prefix + ':' + dataset + '_dsd a qb:DataStructureDefinition ;\n\tqb:component\n\t\t[ a qb:ComponentSpecification ;\n\t\t  qb:codeList ' + data_namespace_prefix + ':conceptscheme/measureType ; \n\t\t  qb:dimension qb:measureType ;\n\t\t  qb:order 1 \n\t] ;\n\tqb:component [ qb:measure ' + vocabulary_namespace_prefix + ':value ] ;\n\t'
 
                 for a in range(n1):
                     this1 = json1['dataset']['dimension']['id'][a]
                     this2 = this1.replace(" ", "_").lower()
-                    scheme += 'qb:component\n\t\t[ a qb:ComponentSpecification ;\n\t\t  qb:codeList <' + data_namespace + 'conceptscheme/' + this2 + '> ;\n\t\t  qb:dimension <' + vocabulary_namespace + this2 + '> ;\n\t\t  qb:order ' + str(
+                    scheme += 'qb:component\n\t\t[ a qb:ComponentSpecification ;\n\t\t  qb:codeList ' + data_namespace_prefix + ':conceptscheme/' + this2 + ' ;\n\t\t  qb:dimension ' + vocabulary_namespace_prefix + ':' + this2 + ' ;\n\t\t  qb:order ' + str(
                         a + 2) + ' \n\t\t] '
                     if a == n1 - 1:
                         scheme += '\n.\n\n'
@@ -369,7 +371,7 @@ def convertToRDF(resource_id, datasetid, vocabulary_namespace, data_namespace, p
                         scheme += ';\n\t'
 
                 ##Scheme: Dataset
-                scheme += '<' + data_namespace + dataset + '_dataset> a qb:DataSet ;\n\tqb:structure <' + data_namespace + dataset + '_dsd> ;\n\trdfs:label "' + \
+                scheme += '' + data_namespace_prefix + ':' + dataset + '_dataset a qb:DataSet ;\n\tqb:structure ' + data_namespace_prefix + ':' + dataset + '_dsd ;\n\trdfs:label "' + \
                           json1['dataset']['label'] + '" ; \n\tprov:generatedAtTime "' + json1['dataset'][
                               'updated'] + '"^^xsd:dateTime ;\n\tdc:creator "' + json1['dataset']['source'] + '" .\n\n'
 
@@ -379,17 +381,18 @@ def convertToRDF(resource_id, datasetid, vocabulary_namespace, data_namespace, p
                 for a in range(n1):
                     this1 = json1['dataset']['dimension']['id'][a]
                     this2 = this1.replace(" ", "_").lower()
-                    code_list += '<' + data_namespace + 'conceptscheme/' + this2 + '> a skos:ConceptScheme ;\n\t'
+                    code_list += '' + data_namespace_prefix + ':conceptscheme/' + this2 + ' a skos:ConceptScheme ;\n\t'
 
-                    keys = json1['dataset']['dimension'][json1['dataset']['dimension']['id'][a]]['category']['index'].keys()
+                    keys = json1['dataset']['dimension'][json1['dataset']['dimension']['id'][a]]['category'][
+                        'index'].keys()
 
-                    cnt = 0
+                    cnt = 0;
 
                     for k in keys:
                         concept = \
                         json1['dataset']['dimension'][json1['dataset']['dimension']['id'][a]]['category']['label'][k]
                         concept = concept.replace(" ", "_").lower()
-                        code_list += 'skos:member <' + data_namespace + 'concept/' + this2 + '/' + concept + '> '
+                        code_list += 'skos:member ' + data_namespace_prefix + ':concept/' + this2 + '/' + concept + ' '
                         if cnt == len(keys) - 1:
                             code_list += '.\n\n'
                         else:
@@ -407,15 +410,16 @@ def convertToRDF(resource_id, datasetid, vocabulary_namespace, data_namespace, p
                         concept = \
                         json1['dataset']['dimension'][json1['dataset']['dimension']['id'][a]]['category']['label'][k]
                         concept2 = concept.replace(" ", "_").lower()
-                        code_list += '<' + data_namespace + 'concept/' + this2 + '/' + concept2 + '> a skos:Concept ;\n\trdfs:label "' + concept + '" .\n\n'
+                        code_list += '' + data_namespace_prefix + ':concept/' + this2 + '/' + concept2 + ' a skos:Concept ;\n\trdfs:label "' + concept + '" .\n\n'
+
 
                 #####Generating Observations#####
 
                 all_term = []
 
-
                 for a in range(n1):
-                    keys = json1['dataset']['dimension'][json1['dataset']['dimension']['id'][a]]['category']['index'].keys()
+                    keys = json1['dataset']['dimension'][json1['dataset']['dimension']['id'][a]]['category'][
+                        'index'].keys()
                     labels = []
 
                     for k in keys:
@@ -439,14 +443,14 @@ def convertToRDF(resource_id, datasetid, vocabulary_namespace, data_namespace, p
                 ##Observations: creating each
 
                 for t in range(total_size):
-                    observations += '[ a qb:Observation ;\n\tqb:dataSet <' + data_namespace + dataset + '_dataset> ;\n\tqb:measureType <' + vocabulary_namespace + 'value> ;\n\t'
+                    observations += '[ a qb:Observation ;\n\tqb:dataSet ' + data_namespace_prefix + ':' + dataset + '_dataset ;\n\tqb:measureType ' + vocabulary_namespace_prefix + ':value ;\n\t'
 
                     for a in range(n1):
                         this1 = json1['dataset']['dimension']['id'][a]
                         this2 = this1.replace(" ", "_").lower()
-                        observations += '<' + vocabulary_namespace + this2 + '> '
-                        observations += '<' + data_namespace + 'concept/' + this2 + '/' + all_term[a][
-                            tracker[a]] + '> ;\n\t'
+                        observations += '' + vocabulary_namespace_prefix + ':' + this2 + ' '
+                        observations += '' + data_namespace_prefix + ':' + 'concept/' + this2 + '/' + all_term[a][
+                            tracker[a]] + ' ;\n\t'
 
                     tracker[track_size - 1] += 1
 
@@ -459,14 +463,17 @@ def convertToRDF(resource_id, datasetid, vocabulary_namespace, data_namespace, p
                             if tracker[i] > size[i] - 1:
                                 tracker[i] = 0
 
-                    observations += 'qb:measureType <' + vocabulary_namespace + 'value> ;\n\t<' + vocabulary_namespace + 'value> "' + str(
+                    observations += 'qb:measureType ' + vocabulary_namespace_prefix + ':value ;\n\t' + vocabulary_namespace_prefix + ':value "' + str(
                         json1['dataset']['value'][t]) + '"^^xsd:float\n] . \n\n'
+
 
                 out_file.write(scheme)
                 out_file.write(code_list)
                 out_file.write(observations)
                 out_file.close()
+
             except Exception as e:
+
                 out_file.close()
                 os.remove(filename)
                 print("Error: Please make sure the file that needs to be converted is a valid json-stat file.")
