@@ -11,7 +11,6 @@ class LosdPlugin(SingletonPlugin):
 
     implements(ITemplateHelpers)
 
-
     def update_config(self, config_):
         toolkit.add_template_directory(config_, 'templates')
         toolkit.add_public_directory(config_, 'public')
@@ -28,7 +27,7 @@ class LosdPlugin(SingletonPlugin):
         map.connect('converttocsv', '/dataset/converttocsv/{id}', controller='ckanext.losd.controllers.converters:CSVConverter', action='convertToCSV')
         map.connect('converttordf', '/dataset/converttordf/{id}', controller='ckanext.losd.controllers.converters:CSVConverter', action='convertToRDF')
         map.connect('pushtordfstore', '/dataset/pushtordfstore/{id}', controller='ckanext.losd.controllers.converters:CSVConverter', action='pushToRDFStore')
-        map.connect('jsonstattordf', '/dataset/jsonstattordf/{id}', controller='ckanext.losd.controllers.converters:JsonStatConverter', action='convertToRDFJobs')
+        map.connect('jsonstattordf', '/dataset/jsonstattordf/{id}', controller='ckanext.losd.controllers.converters:RDFConverter', action='convertToRDFJobs')
         map.connect('updatehomeorg', '/updatehomeorg/{org_1}/{org_2}/{org_3}/{org_4}', controller='ckanext.losd.controllers.update_home_org:UpdateHomeOrganization', action='update_home_org')
 
         return map

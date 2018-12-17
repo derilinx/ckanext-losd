@@ -1,18 +1,8 @@
 from ckan.lib.base import BaseController, render
-from ckanapi import LocalCKAN, NotFound, ValidationError
-import uuid
-from pyjstat import pyjstat
 import ckan.plugins.toolkit as tk
-import ckan.lib.base as base
-import ckan.model as model
-import ckan.logic as logic
-import ckan.lib.helpers as h
 import os
-import urllib2
-import pycurl
 import json
-import ckan.lib.jobs as jobs
-import sys
+
 
 _ = tk._
 c = tk.c
