@@ -58,7 +58,7 @@
         {% if 'rdf' in (res.format).lower() and h.check_access('package_update', {'id':pkg.id }) %}
 <div class="module-content box" id="push_resource_rdfstore">
 <h2> {{ _('Push this resource to RDF Store') }} </h2>
-        {% set actionPushToStore = h.url_for(controller='ckanext.losd.controllers.converters:CSVConverter', action='pushToRDFStore', id=pkg.name, pkg_id=pkg.name, resource_id=res.id) %}
+        {% set actionPushToStore = h.url_for(controller='ckanext.losd.controllers.converters:RDFConverter', action='pushToRDFStore', id=pkg.name, pkg_id=pkg.name, resource_id=res.id) %}
         <p>{{ _('You can push this resource to a Virtuoso RDF Store by giving the following details and clicking on the "Push to RDF Store" button' ) }}</p>
 
   <form method="post" action="{{ actionPushToStore }}" >
