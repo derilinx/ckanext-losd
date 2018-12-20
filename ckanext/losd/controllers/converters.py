@@ -159,68 +159,6 @@ class CSVConverter(BaseController):
 
             print('not found')
 
-    def pushToRDFStore(self):
-
-        losd = LocalCKAN()
-
-        try:
-            resource_id = request.params.get('resource_id', u'')
-            resource_rdf = losd.action.resource_show(id=resource_id)
-            source_url = resource_rdf['url']
-            rdfStoreURL = request.params.get('storeURL', u'')
-            rdfStoreUser = request.params.get('userName', u'')
-            rdfStorePass = request.params.get('password', u'')
-            graphIRI = request.params.get('graphIRI', u'')
-            pkg_id = request.params.get('pkg_id', u'')
-
-            # Create a file for a given resource url
-            temp_rdf_file_create(source_url)
-
-            filename = local_file_to_use_for_RDFStore
-            filesize = os.path.getsize(filename)
-
-            # read from juma
-
-            push_url = rdfStoreURL + '/sparql-graph-crud-auth?graph-uri=' + graphIRI
-
-            if not os.path.exists(filename):
-                print
-                "Error: the file '%s' does not exist" % filename
-                raise SystemExit
-            c = pycurl.Curl()
-            c.setopt(c.POST, True)
-
-            # c.setopt(pycurl.HTTPAUTH, pycurl.HTTPAUTH_BASIC)
-            c.setopt(pycurl.HTTPAUTH, pycurl.HTTPAUTH_DIGEST)
-            c.setopt(pycurl.USERPWD, rdfStoreUser + ':' + rdfStorePass)
-            c.setopt(pycurl.URL, push_url)
-            c.setopt(pycurl.UPLOAD, 1)
-            file = open(filename)
-            c.setopt(c.READDATA, file)
-            c.setopt(pycurl.POSTFIELDSIZE, filesize)
-
-            # Two versions with the same semantics here, but the filereader version
-            # is useful when you have to process the data which is read before returning
-            # c.setopt(pycurl.HTTPPOST, [("file1", (c.FORM_FILE, filename))])
-            # c.setopt(pycurl.READFUNCTION, open(filename, 'rb').read)
-
-            c.setopt(c.VERBOSE, True)
-            c.perform()
-            c.close()
-
-            os.remove(filename)
-
-            h.flash_notice(_('This resource has been pushed to RDF store successfully.'))
-            tk.redirect_to(controller='package', action='resource_read',
-                           id=pkg_id, resource_id=resource_id)
-        except Exception as e:
-
-            pkg_id = request.params.get('pkg_id', u'')
-            resource_id = request.params.get('resource_id', u'')
-            h.flash_error(_('Error in pushing this resource to RDF store.'))
-            tk.redirect_to(controller='package', action='resource_read',
-                           id=pkg_id, resource_id=resource_id)
-
 
 class RDFConverter(BaseController):
 

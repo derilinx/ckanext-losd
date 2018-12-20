@@ -2,7 +2,6 @@ from ckan.plugins import SingletonPlugin, implements, toolkit, IConfigurer, ITem
 from ckanext.losd import helpers as h
 
 
-
 class LosdPlugin(SingletonPlugin):
     implements(IConfigurer, inherit=True)
     implements(IRoutes, inherit=True)
