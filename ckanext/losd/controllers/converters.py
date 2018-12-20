@@ -11,7 +11,7 @@ import pycurl
 import ckan.lib.jobs as jobs
 from . import jsonstatToRDF_conv as RdfConv
 import requests
-
+from requests.auth import HTTPDigestAuth
 
 _ = tk._
 c = tk.c
@@ -31,27 +31,25 @@ NotAuthorized = tk.NotAuthorized
 local_file_to_use_for_RDFStore = '/var/lib/ckan/storage/uploads/topushinRDFStore.ttl'
 
 
-def dlfile(full_url):
+def temp_rdf_file_create(source_url):
     # create the url and the request
-    req = urllib2.Request(full_url)
 
-    # Open the url
+    # Load the rdf file from the resource url
+
     try:
-        f = urllib2.urlopen(req)
 
-        # Open our local file for writing
-        local_file = open(local_file_to_use_for_RDFStore, "wb")
-        # Write to our local file
-        local_file.write(f.read())
-        local_file.close()
+        source_rdf = urllib2.urlopen(source_url).read()
+        with open(local_file_to_use_for_RDFStore, "wb") as local_file:
+            local_file.write(source_rdf)
+            local_file.close()
 
-    # handle errors
-    except urllib2.HTTPError, e:
-        print
-        "HTTP Error:", e.code, url
-    except urllib2.URLError, e:
-        print
-        "URL Error:", e.reason, url
+        # Loading the rdf file to temporary path is successful
+        return True
+
+    except Exception as e:
+
+        # False represents something wrong in opening a rdf resource or url
+        return False
 
 
 def get_content(url):
@@ -175,22 +173,15 @@ class CSVConverter(BaseController):
             graphIRI = request.params.get('graphIRI', u'')
             pkg_id = request.params.get('pkg_id', u'')
 
-            print('\n\n\n\n\n\n')
-            print
-            "Verification of the resource"
-            dlfile(source_url)
-            print('\n\n\n\n\n\n')
+            # Create a file for a given resource url
+            temp_rdf_file_create(source_url)
+
             filename = local_file_to_use_for_RDFStore
             filesize = os.path.getsize(filename)
-            print
-            filesize
-            print('\n\n\n\n\n\n')
+
             # read from juma
 
             push_url = rdfStoreURL + '/sparql-graph-crud-auth?graph-uri=' + graphIRI
-            print('\n\n\n\n\n\n')
-            print('URL to RDF store: ' + push_url)
-            print('\n\n\n\n\n\n')
 
             if not os.path.exists(filename):
                 print
@@ -198,7 +189,7 @@ class CSVConverter(BaseController):
                 raise SystemExit
             c = pycurl.Curl()
             c.setopt(c.POST, True)
-            print('user ===> ' + rdfStoreUser + ':' + rdfStorePass)
+
             # c.setopt(pycurl.HTTPAUTH, pycurl.HTTPAUTH_BASIC)
             c.setopt(pycurl.HTTPAUTH, pycurl.HTTPAUTH_DIGEST)
             c.setopt(pycurl.USERPWD, rdfStoreUser + ':' + rdfStorePass)
@@ -207,18 +198,16 @@ class CSVConverter(BaseController):
             file = open(filename)
             c.setopt(c.READDATA, file)
             c.setopt(pycurl.POSTFIELDSIZE, filesize)
-            print('Setting parameters')
+
             # Two versions with the same semantics here, but the filereader version
             # is useful when you have to process the data which is read before returning
             # c.setopt(pycurl.HTTPPOST, [("file1", (c.FORM_FILE, filename))])
             # c.setopt(pycurl.READFUNCTION, open(filename, 'rb').read)
-            print('\n\n\n\n\n\n')
-            print('uploading')
+
             c.setopt(c.VERBOSE, True)
             c.perform()
             c.close()
-            print('\n\n\n\n\n\n')
-            print('end uploading')
+
             os.remove(filename)
 
             h.flash_notice(_('This resource has been pushed to RDF store successfully.'))
@@ -235,6 +224,12 @@ class CSVConverter(BaseController):
 
 class RDFConverter(BaseController):
 
+    def remove_tmp_file(self, filename):
+
+        if os.path.isfile(filename):
+
+            os.remove(filename)
+
     def convertToRDFJobs(self):
 
         """ This creates json-stat to rdf conversion as background jobs and appropriate message will appear.
@@ -246,20 +241,20 @@ class RDFConverter(BaseController):
         data_namespace = request.params.get('DataNmSpace', u'')
         pkg_id = request.params.get('pkg_id', u'')
 
-        #job = jobs.enqueue(RdfConv.convertToRDF, [resource_id, datasetid, vocabulary_namespace, data_namespace, pkg_id])
+        job = jobs.enqueue(RdfConv.convertToRDF, [resource_id, datasetid, vocabulary_namespace, data_namespace, pkg_id])
+        task_id = job.id
 
-        #task_id = job.id
+        #res = RdfConv.convertToRDF(resource_id, datasetid, vocabulary_namespace, data_namespace, pkg_id)
 
-        res = RdfConv.convertToRDF(resource_id, datasetid, vocabulary_namespace, data_namespace, pkg_id)
-
-        #h.flash_notice(_('RDF file being created. Please visit the dataset page after few minutes. If you dont see the RDF file after a while, please contact administrator along with the Job id: '+task_id))
+        h.flash_notice(_('RDF file being created. Please visit the dataset page after few minutes. '
+                         'If you dont see the RDF file after a while, please contact administrator '
+                         'along with the Job id: '+task_id))
         tk.redirect_to(controller='package', action='read', id=pkg_id)
 
     def pushToRDFStore(self):
 
         losd = LocalCKAN()
 
-        #try:
         resource_id = request.params.get('resource_id', u'')
         resource_rdf = losd.action.resource_show(id=resource_id)
         source_url = resource_rdf['url']
@@ -269,69 +264,54 @@ class RDFConverter(BaseController):
         graphIRI = request.params.get('graphIRI', u'')
         pkg_id = request.params.get('pkg_id', u'')
 
-        print('\n\n\n\n\n\n')
-        print
-        "Verification of the resource"
-        dlfile(source_url)
-        print('\n\n\n\n\n\n')
-        filename = local_file_to_use_for_RDFStore
-        filesize = os.path.getsize(filename)
-        print
-        filesize
-        print('\n\n\n\n\n\n')
-        # read from juma
+        # Create a file for a given resource url
+        if not temp_rdf_file_create(source_url):
+            raise SystemError
 
+        filename = local_file_to_use_for_RDFStore
         push_url = rdfStoreURL + '/sparql-graph-crud-auth?graph-uri=' + graphIRI
-        print('\n\n\n\n\n\n')
-        print('URL to RDF store: ' + push_url)
-        print('\n\n\n\n\n\n')
 
         if not os.path.exists(filename):
-            print
-            "Error: the file '%s' does not exist" % filename
-            raise SystemExit
-        '''c = pycurl.Curl()
-        c.setopt(c.POST, True)
-        print('user ===> ' + rdfStoreUser + ':' + rdfStorePass)
-        # c.setopt(pycurl.HTTPAUTH, pycurl.HTTPAUTH_BASIC)
-        c.setopt(pycurl.HTTPAUTH, pycurl.HTTPAUTH_DIGEST)
-        c.setopt(pycurl.USERPWD, rdfStoreUser + ':' + rdfStorePass)
-        c.setopt(pycurl.URL, push_url)
-        c.setopt(pycurl.UPLOAD, 1)
-        file = open(filename)
-        c.setopt(c.READDATA, file)
-        c.setopt(pycurl.POSTFIELDSIZE, filesize)
-        print('Setting parameters')
-        # Two versions with the same semantics here, but the filereader version
-        # is useful when you have to process the data which is read before returning
-        # c.setopt(pycurl.HTTPPOST, [("file1", (c.FORM_FILE, filename))])
-        # c.setopt(pycurl.READFUNCTION, open(filename, 'rb').read)
-        print('\n\n\n\n\n\n')
-        print('uploading')
-        c.setopt(c.VERBOSE, True)
-        c.perform()
-        c.close()'''
+            raise FileExistsError
 
-        response = requests.post('http://losd.staging.derilinx.com:8890/sparql-graph-crud-auth?graph-uri=http://localhost:8890/DAV',
-                                 files={'files': open(filename, 'rb')},
-                                 headers={'dba':'ld-cso-project'})
+        try:
 
-        print "**************************************"
+            # This is equivalent curl command
+            os.system('curl -X PUT/POST --digest -u "'+rdfStoreUser+':'+rdfStorePass+'" --url "'+ push_url
+                      + '" -T ' + filename)
 
-        print response.text
-        print response
+            '''response = requests.post(push_url, files={'files': open(filename, 'rb')},
+                                     auth=HTTPDigestAuth(rdfStoreUser, rdfStorePass))'''
 
-        print('\n\n\n\n\n\n')
-        print('end uploading')
-        os.remove(filename)
+            os.remove(filename)
 
-        h.flash_notice(_('This resource has been pushed to RDF store successfully.'))
-        tk.redirect_to(controller='package', action='resource_read',
-                       id=pkg_id, resource_id=resource_id)
-        #except Exception as e:
+            '''if str(response.status_code) == '201':
+    
+                h.flash_notice(_('This resource has been pushed to RDF store successfully.'))
+                tk.redirect_to(controller='package', action='resource_read',
+                               id=pkg_id, resource_id=resource_id)
+            else:
+                raise Exception'''
 
-            #pkg_id = request.params.get('pkg_id', u'')
-            #resource_id = request.params.get('resource_id', u'')
-            #h.flash_error(_('Error in pushing this resource to RDF store.'))
-            #tk.redirect_to(controller='package', action='resource_read',
-                           #id=pkg_id, resource_id=resource_id)
+            h.flash_notice(_('This resource has been pushed to RDF store successfully.'))
+            tk.redirect_to(controller='package', action='resource_read',
+                           id=pkg_id, resource_id=resource_id)
+
+        except Exception as e:
+
+            self.remove_tmp_file(filename)
+            h.flash_error(_('Error in pushing this resource to RDF store. Please validate the RDF file.'))
+            tk.redirect_to(controller='package', action='resource_read', id=pkg_id, resource_id=resource_id)
+
+        except FileNotFoundError:
+
+            self.remove_tmp_file(filename)
+            h.flash_error(_('Please verify that RDF file (URL) exists.'))
+            tk.redirect_to(controller='package', action='resource_read', id=pkg_id, resource_id=resource_id)
+
+        except FileExistsError:
+
+            self.remove_tmp_file(filename)
+            h.flash_error(_('Temporary file already exists. Please contact system administrator.'))
+            tk.redirect_to(controller='package', action='resource_read', id=pkg_id, resource_id=resource_id)
+

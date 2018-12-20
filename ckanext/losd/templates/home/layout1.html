@@ -1,8 +1,6 @@
-{% set org_widget = h.get_org_widget_data() %}
 {% if c.userobj.sysadmin %}
           {% set organizations = h.organizations_available() %}
 {% endif %}
-
 <div role="main" id="front-page-hero" class="hero-unit">
   <div class="container">
     <div class="row row1">
@@ -53,6 +51,7 @@
     </div>
   </div>
 </div>
+{% set org_widget = h.get_org_widget_data() %}
   <div class="container">
     <div class="row row3">
       <div class="col-md-6 span6 col1">
@@ -63,9 +62,22 @@
       <label for="field-organizations-a" class="control-label">{{ _('Organization 1') }}</label>
       <div class="controls">
         <select id="field-organizations-a" name="owner_org" data-module="autocomplete">
+
             {% for organization in organizations %}
-            <option value="{{ organization.id }}" {% if selected_org %} selected="selected" {% endif %}>{{ organization.title }}</option>
-          {% endfor %}
+                {% if organization.id == org_widget['org_1'] %}
+                    {% set selected_org1 = "True" %}
+                    <option value="{{ organization.id }}" selected="selected">{{ organization.title }}</option>
+                {% else %}
+                    <option value="{{ organization.id }}">{{ organization.title }}</option>
+                {% endif %}
+            {% endfor %}
+
+            {% if org_widget['org_1'] == "na" %}
+                <option value="na" selected="selected">{{ _('No organization') }}</option>
+            {% else %}
+                <option value="na">{{ _('No organization') }}</option>
+            {% endif %}
+
         </select>
       </div>
     </div>
@@ -84,9 +96,22 @@
       <label for="field-organizations-b" class="control-label">{{ _('Organization 2') }}</label>
       <div class="controls">
         <select id="field-organizations-b" name="owner_org" data-module="autocomplete">
+
             {% for organization in organizations %}
-            <option value="{{ organization.id }}" {% if selected_org %} selected="selected" {% endif %}>{{ organization.title }}</option>
-          {% endfor %}
+                {% if organization.id == org_widget['org_2'] %}
+                    {% set selected_org1 = "True" %}
+                    <option value="{{ organization.id }}" selected="selected">{{ organization.title }}</option>
+                {% else %}
+                    <option value="{{ organization.id }}">{{ organization.title }}</option>
+                {% endif %}
+            {% endfor %}
+
+            {% if org_widget['org_2'] == "na" %}
+                <option value="na" selected="selected">{{ _('No organization') }}</option>
+            {% else %}
+                <option value="na">{{ _('No organization') }}</option>
+            {% endif %}
+
         </select>
       </div>
     </div>
@@ -107,9 +132,22 @@
       <label for="field-organizations-c" class="control-label">{{ _('Organization 3') }}</label>
       <div class="controls">
         <select id="field-organizations-c" name="owner_org" data-module="autocomplete">
+
             {% for organization in organizations %}
-            <option value="{{ organization.id }}" {% if selected_org %} selected="selected" {% endif %}>{{ organization.title }}</option>
-          {% endfor %}
+                {% if organization.id == org_widget['org_3'] %}
+                    {% set selected_org1 = "True" %}
+                    <option value="{{ organization.id }}" selected="selected">{{ organization.title }}</option>
+                {% else %}
+                    <option value="{{ organization.id }}">{{ organization.title }}</option>
+                {% endif %}
+            {% endfor %}
+
+            {% if org_widget['org_3'] == "na" %}
+                <option value="na" selected="selected">{{ _('No organization') }}</option>
+            {% else %}
+                <option value="na">{{ _('No organization') }}</option>
+            {% endif %}
+
         </select>
       </div>
     </div>
@@ -128,9 +166,22 @@
       <label for="field-organizations-d" class="control-label">{{ _('Organization 4') }}</label>
       <div class="controls">
         <select id="field-organizations-d" name="owner_org" data-module="autocomplete">
+
             {% for organization in organizations %}
-            <option value="{{ organization.id }}" {% if selected_org %} selected="selected" {% endif %}>{{ organization.title }}</option>
-          {% endfor %}
+                {% if organization.id == org_widget['org_4'] %}
+                    {% set selected_org1 = "True" %}
+                    <option value="{{ organization.id }}" selected="selected">{{ organization.title }}</option>
+                {% else %}
+                    <option value="{{ organization.id }}">{{ organization.title }}</option>
+                {% endif %}
+            {% endfor %}
+
+            {% if org_widget['org_4'] == "na" %}
+                <option value="na" selected="selected">{{ _('No organization') }}</option>
+            {% else %}
+                <option value="na">{{ _('No organization') }}</option>
+            {% endif %}
+
         </select>
       </div>
     </div>
