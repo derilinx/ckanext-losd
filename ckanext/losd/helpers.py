@@ -10,7 +10,7 @@ def supported_rdf_format(format):
 
 def get_org_widget_data():
 
-    filename = os.path.normpath(os.path.join(os.path.abspath(__file__), "../public/org_data/homeorg_widget_data.json"))
+    filename = '/var/lib/ckan/storage/uploads/homeorg_widget_data.json'
 
     try:
         if not os.path.isfile(filename):
