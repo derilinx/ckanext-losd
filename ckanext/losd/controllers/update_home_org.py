@@ -1,18 +1,8 @@
 from ckan.lib.base import BaseController, render
-from ckanapi import LocalCKAN, NotFound, ValidationError
-import uuid
-from pyjstat import pyjstat
 import ckan.plugins.toolkit as tk
-import ckan.lib.base as base
-import ckan.model as model
-import ckan.logic as logic
-import ckan.lib.helpers as h
 import os
-import urllib2
-import pycurl
 import json
-import ckan.lib.jobs as jobs
-import sys
+
 
 _ = tk._
 c = tk.c
@@ -25,9 +15,12 @@ class UpdateHomeOrganization(BaseController):
     def update_home_org(self, org_1, org_2, org_3, org_4):
 
         filename = '/var/lib/ckan/storage/uploads/homeorg_widget_data.json'
+<<<<<<< HEAD
 	print("************************************************")
 	print(filename)
 	print(org_1, org_2, org_3, org_4)
+=======
+>>>>>>> e500a29bb08e919e6d69b94db9313670313fd7ac
 
         try:
 

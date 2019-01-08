@@ -2,7 +2,6 @@ from ckan.plugins import SingletonPlugin, implements, toolkit, IConfigurer, ITem
 from ckanext.losd import helpers as h
 
 
-
 class LosdPlugin(SingletonPlugin):
     implements(IConfigurer, inherit=True)
     implements(IRoutes, inherit=True)
@@ -10,7 +9,6 @@ class LosdPlugin(SingletonPlugin):
     # IConfigurer
 
     implements(ITemplateHelpers)
-
 
     def update_config(self, config_):
         toolkit.add_template_directory(config_, 'templates')
@@ -27,8 +25,8 @@ class LosdPlugin(SingletonPlugin):
 
         map.connect('converttocsv', '/dataset/converttocsv/{id}', controller='ckanext.losd.controllers.converters:CSVConverter', action='convertToCSV')
         map.connect('converttordf', '/dataset/converttordf/{id}', controller='ckanext.losd.controllers.converters:CSVConverter', action='convertToRDF')
-        map.connect('pushtordfstore', '/dataset/pushtordfstore/{id}', controller='ckanext.losd.controllers.converters:CSVConverter', action='pushToRDFStore')
-        map.connect('jsonstattordf', '/dataset/jsonstattordf/{id}', controller='ckanext.losd.controllers.converters:JsonStatConverter', action='convertToRDFJobs')
+        map.connect('pushtordfstore', '/dataset/pushtordfstore/{id}', controller='ckanext.losd.controllers.converters:RDFConverter', action='pushToRDFStore')
+        map.connect('jsonstattordf', '/dataset/jsonstattordf/{id}', controller='ckanext.losd.controllers.converters:RDFConverter', action='convertToRDFJobs')
         map.connect('updatehomeorg', '/updatehomeorg/{org_1}/{org_2}/{org_3}/{org_4}', controller='ckanext.losd.controllers.update_home_org:UpdateHomeOrganization', action='update_home_org')
 
         return map
