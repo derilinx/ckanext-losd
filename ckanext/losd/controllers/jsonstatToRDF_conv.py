@@ -419,8 +419,8 @@ def convertToRDF(resource_id, datasetid, vocabulary_namespace, data_namespace, p
 
             turtle_file = NamedTemporaryFile(suffix='.ttl', delete=True)
 
-
             with open(turtle_file.name, 'w') as out_file:
+
                 out_file.write("".join(scheme))
                 out_file.write(''.join(code_list))
                 out_file.write(''.join(observations))

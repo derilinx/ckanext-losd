@@ -14,8 +14,7 @@ class UpdateHomeOrganization(BaseController):
 
     def update_home_org(self, org_1, org_2, org_3, org_4):
 
-        filename = os.path.join(__file__, "../../public/org_data/homeorg_widget_data.json")
-        filename = os.path.normpath(filename)
+        filename = '/var/lib/ckan/storage/uploads/homeorg_widget_data.json'
 
         try:
 
