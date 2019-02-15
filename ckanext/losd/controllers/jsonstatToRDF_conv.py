@@ -1,3 +1,4 @@
+
 from ckanapi import LocalCKAN, NotFound, ValidationError
 import urllib2
 import json
@@ -5,6 +6,7 @@ from tempfile import NamedTemporaryFile
 import string
 import re
 import uuid
+from collections import OrderedDict
 
 
 def _cleanString(s):
@@ -62,7 +64,7 @@ def convertToRDF(resource_id, datasetid, vocabulary_namespace, data_namespace, p
     source_url = resource_jsonstat['url']
 
     # read from json-stat from a url
-    source_json = json.loads(urllib2.urlopen(source_url).read())
+    source_json = json.loads(urllib2.urlopen(source_url).read(), object_pairs_hook=OrderedDict)
 
     def conversion_for_old_jstat_version():
 
@@ -143,23 +145,29 @@ def convertToRDF(resource_id, datasetid, vocabulary_namespace, data_namespace, p
 
             # Codelist: Conceptscheme
 
-            for data_field_nm in dimensions['id']:
+            for index, data_field_nm in enumerate(dimensions['id']):
                 code_list.append('' + data_namespace_prefix + 'schm:' +
                                  _cleanString(data_field_nm) + ' a skos:ConceptScheme ;\n\t')
 
                 skos_members = []
-                for concept in dimensions[data_field_nm]['category']['label'].values():
+                for k in dimensions[data_field_nm]['category']['index'].keys():
+                    concept = dimensions[data_field_nm]['category']['label'][k]
+
                     skos_members.append(
-                        'skos:member ' + prefix_build_concept(data_namespace_prefix, data_field_nm) + _cleanString(concept) + ' ')
+                        'skos:member ' + prefix_build_concept(data_namespace_prefix, data_field_nm) + _cleanString(
+                            concept) + ' ')
 
                 code_list.append(';\n\t'.join(skos_members) + '.\n\n')
 
             # Codelist: Concepts
 
             for data_field_nm in dimensions['id']:
-                for concept in dimensions[data_field_nm]['category']['label'].values():
-                    code_list.append('' + prefix_build_concept(data_namespace_prefix, data_field_nm) + _cleanString(concept) +
-                                     ' a skos:Concept ;\n\trdfs:label "' + concept.encode('utf-8') + '" .\n\n')
+
+                for k in dimensions[data_field_nm]['category']['index'].keys():
+                    concept = dimensions[data_field_nm]['category']['label'][k]
+                    code_list.append(
+                        '' + prefix_build_concept(data_namespace_prefix, data_field_nm) + _cleanString(concept) +
+                        ' a skos:Concept ;\n\trdfs:label "' + concept.encode('utf-8') + '" .\n\n')
 
             # Generating Observations
 
@@ -167,7 +175,9 @@ def convertToRDF(resource_id, datasetid, vocabulary_namespace, data_namespace, p
 
             for data_field_nm in dimensions['id']:
                 labels = []
-                for concept in dimensions[data_field_nm]['category']['label'].values():
+
+                for k in dimensions[data_field_nm]['category']['index'].keys():
+                    concept = dimensions[data_field_nm]['category']['label'][k]
                     labels.append(_cleanString(concept))
 
                 all_term.append(labels)
@@ -193,7 +203,8 @@ def convertToRDF(resource_id, datasetid, vocabulary_namespace, data_namespace, p
                 for index, data_field_nm in enumerate(dimensions['id']):
                     observations.append('' + vocabulary_namespace_prefix + ':' + _cleanString(data_field_nm) + ' ')
                     observations.append(
-                        '' + prefix_build_concept(data_namespace_prefix, data_field_nm) + all_term[index][tracker[index]] + ' ;\n\t')
+                        '' + prefix_build_concept(data_namespace_prefix, data_field_nm) + all_term[index][
+                            tracker[index]] + ' ;\n\t')
 
                 tracker[track_size - 1] += 1
 
@@ -344,10 +355,13 @@ def convertToRDF(resource_id, datasetid, vocabulary_namespace, data_namespace, p
                                      _cleanString(data_field_nm) + ' a skos:ConceptScheme ;\n\t')
 
                     skos_members = []
-                    for concept in dimensions[data_field_nm]['category']['label'].values():
+                    for k in dimensions[data_field_nm]['category']['index'].keys():
+                        concept = dimensions[data_field_nm]['category']['label'][k]
+                        # print(concept)
+
                         skos_members.append(
-                            'skos:member ' + prefix_build_concept(data_namespace_prefix, data_field_nm) +
-                            _cleanString(concept) + ' ')
+                            'skos:member ' + prefix_build_concept(data_namespace_prefix, data_field_nm) + _cleanString(
+                                concept) + ' ')
 
                     code_list.append(';\n\t'.join(skos_members) + '.\n\n')
 
@@ -355,10 +369,12 @@ def convertToRDF(resource_id, datasetid, vocabulary_namespace, data_namespace, p
 
             for data_field_nm in field_nms:
                 if data_field_nm != 'Units':
-                    for concept in dimensions[data_field_nm]['category']['label'].values():
-                        code_list.append('' + prefix_build_concept(data_namespace_prefix, data_field_nm) +
-                                         _cleanString(concept) + ' a skos:Concept ;\n\trdfs:label "' +
-                                         concept.encode('utf-8') + '" .\n\n')
+
+                    for k in dimensions[data_field_nm]['category']['index'].keys():
+                        concept = dimensions[data_field_nm]['category']['label'][k]
+                        code_list.append(
+                            '' + prefix_build_concept(data_namespace_prefix, data_field_nm) + _cleanString(concept) +
+                            ' a skos:Concept ;\n\trdfs:label "' + concept.encode('utf-8') + '" .\n\n')
 
             # Generating Observations
 
@@ -366,7 +382,8 @@ def convertToRDF(resource_id, datasetid, vocabulary_namespace, data_namespace, p
             for data_field_nm in field_nms:
                 if data_field_nm != 'Units':
                     labels = []
-                    for concept in source_json['dimension'][data_field_nm]['category']['label'].values():
+                    for k in dimensions[data_field_nm]['category']['index'].keys():
+                        concept = dimensions[data_field_nm]['category']['label'][k]
                         labels.append(_cleanString(concept))
 
                     all_term.append(labels)
@@ -470,5 +487,6 @@ def convertToRDF(resource_id, datasetid, vocabulary_namespace, data_namespace, p
     else:
 
         conversion_for_old_jstat_version()
+
 
 

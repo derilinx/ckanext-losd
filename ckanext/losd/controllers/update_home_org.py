@@ -15,12 +15,6 @@ class UpdateHomeOrganization(BaseController):
     def update_home_org(self, org_1, org_2, org_3, org_4):
 
         filename = '/var/lib/ckan/storage/uploads/homeorg_widget_data.json'
-<<<<<<< HEAD
-	print("************************************************")
-	print(filename)
-	print(org_1, org_2, org_3, org_4)
-=======
->>>>>>> e500a29bb08e919e6d69b94db9313670313fd7ac
 
         try:
 

@@ -12,6 +12,7 @@ import ckan.lib.jobs as jobs
 from . import jsonstatToRDF_conv as RdfConv
 import requests
 from requests.auth import HTTPDigestAuth
+import json
 
 _ = tk._
 c = tk.c
@@ -122,18 +123,24 @@ class CSVConverter(BaseController):
             resource_id = request.params.get('resource_id', u'')
             resource_csv = losd.action.resource_show(id=resource_id)
             Source_URL = resource_csv['url']
-            print('\n\n\n\n\n\n')
-            print(Source_URL)
+
             # read from juma
             jumaUser = request.params.get('jumaUser', u'')
             jumaMappingID = request.params.get('jumaMappingID', u'')
             juma_url = 'http://losd.staging.derilinx.com:8889/juma-api?user=' + jumaUser + '&map=' + jumaMappingID + '&source=' + Source_URL
-            print(juma_url)
+
             # dataset_rdf = get_content(juma_url)
             # write to dataframe
             filename = '/var/lib/ckan/storage/uploads/' + unicode(uuid.uuid4()) + '.ttl'
             # file = open(filename ,'w+')
-            response = urllib2.urlopen(juma_url)
+            try:
+                response = urllib2.urlopen(juma_url)
+            except Exception, e:
+
+                id = request.params.get('pkg_id', u'')
+                h.flash_error(_(e))
+                tk.redirect_to(controller='package', action='read', id=id)
+
             CHUNK = 16 * 1024
             with open(filename, 'wb') as f:
                 while True:
@@ -157,7 +164,10 @@ class CSVConverter(BaseController):
                            id=id)
         except NotFound:
 
-            print('not found')
+            id = request.params.get('pkg_id', u'')
+            h.flash_error(_('Something went wrong!.'))
+            tk.redirect_to(controller='package', action='read',
+                           id=id)
 
 
 class RDFConverter(BaseController):
@@ -186,7 +196,7 @@ class RDFConverter(BaseController):
 
         h.flash_notice(_('RDF file being created. Please visit the dataset page after few minutes. '
                          'If you dont see the RDF file after a while, please contact administrator '
-                         'along with the Job id: '+task_id))
+                         'along with the Job id:'+task_id))
         tk.redirect_to(controller='package', action='read', id=pkg_id)
 
     def pushToRDFStore(self):
@@ -213,33 +223,23 @@ class RDFConverter(BaseController):
             raise FileExistsError
 
         try:
-
             # This is equivalent curl command
-            os.system('curl -X PUT/POST --digest -u "'+rdfStoreUser+':'+rdfStorePass+'" --url "'+ push_url
-                      + '" -T ' + filename)
+            curl_result = os.popen('curl -X PUT/POST --digest -u "'+rdfStoreUser+':'+rdfStorePass+'" --url "'+ push_url
+                      + '" -T ' + filename).read()
 
-            '''response = requests.post(push_url, files={'files': open(filename, 'rb')},
-                                     auth=HTTPDigestAuth(rdfStoreUser, rdfStorePass))'''
-
-            os.remove(filename)
-
-            '''if str(response.status_code) == '201':
-    
-                h.flash_notice(_('This resource has been pushed to RDF store successfully.'))
+            if curl_result:
+                self.remove_tmp_file(filename)
+                h.flash_error(_('RDF syntax error, please check the RDF file.'))
                 tk.redirect_to(controller='package', action='resource_read',
                                id=pkg_id, resource_id=resource_id)
-            else:
-                raise Exception'''
-
-            h.flash_notice(_('This resource has been pushed to RDF store successfully.'))
-            tk.redirect_to(controller='package', action='resource_read',
-                           id=pkg_id, resource_id=resource_id)
-
-        except Exception as e:
+                sys.exit(1)
 
             self.remove_tmp_file(filename)
-            h.flash_error(_('Error in pushing this resource to RDF store. Please validate the RDF file.'))
-            tk.redirect_to(controller='package', action='resource_read', id=pkg_id, resource_id=resource_id)
+            h.flash_notice(_('Please Note: No error response will be generated for invalid username and password. '
+                             'Please check the RDF store for the successful push'))
+            tk.redirect_to(controller='package', action='resource_read',
+                           id=pkg_id, resource_id=resource_id)
+            sys.exit(0)
 
         except FileNotFoundError:
 
@@ -251,5 +251,5 @@ class RDFConverter(BaseController):
 
             self.remove_tmp_file(filename)
             h.flash_error(_('Temporary file already exists. Please contact system administrator.'))
-            tk.redirect_to(controller='package', action='resource_read', id=pkg_id, resource_id=resource_id)
+            tk.redirect_to(controller='package', action='resource_read', id=pkg_id, resource_id=resource_id)'''
 

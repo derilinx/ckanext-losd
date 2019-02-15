@@ -37,15 +37,15 @@
   <form method="post" action="{{ actionRDF }}" >
 	<div class="row">
 		<div class="col-md-3" style="text-align:right;">  {{ _(' Juma username:' ) }} </div>
-		<div class="col-md-3"><input type="text" name="jumaUser" value=""></div>
+		<div class="col-md-3"><input type="text" name="jumaUser" value="" required="required"></div>
 	</div>
 	<div class="row">
 		<div class="col-md-3" style="text-align:right;"> {{ _('Juma mapping ID:') }} </div>
-		<div class="col-md-3"><input type="text" name="jumaMappingID" value=""></div>
+		<div class="col-md-3"><input type="text" name="jumaMappingID" value="" required="required"></div>
         </div>
         <div class="row">
                 <div class="col-md-3" style="text-align:right;"> {{ _('Title of the new resource:') }} </div>
-                <div class="col-md-3"><input type="text" name="newResourceName" value=""></div>
+                <div class="col-md-3"><input type="text" name="newResourceName" value="" required="required"></div>
 		<div class="col-md-3" style="text-align:left;">
 		 <button class="btn btn-success" name="save" type="submit"><i class="fa fa-file"></i> {{ _('Convert to RDF') }} </button>
 		</div>
@@ -64,19 +64,19 @@
   <form method="post" action="{{ actionPushToStore }}" >
         <div class="row">
                 <div class="col-md-3" style="text-align:right;">  {{ _(' Virtuoso RDF Store URL:' ) }} </div>
-                <div class="col-md-3"><input type="text" name="storeURL" value=""></div>
+                <div class="col-md-3"><input type="text" name="storeURL" value="" required="required"></div>
         </div>
         <div class="row">
                 <div class="col-md-3" style="text-align:right;"> {{ _('User Name:') }} </div>
-                <div class="col-md-3"><input type="text" name="userName" value=""></div>
+                <div class="col-md-3"><input type="text" name="userName" value="" required="required"></div>
         </div>
         <div class="row">
                 <div class="col-md-3" style="text-align:right;"> {{ _('Password:') }} </div>
-                <div class="col-md-3"><input type="password" name="password" value=""></div>
+                <div class="col-md-3"><input type="password" name="password" value="" required="required"></div>
         </div>
         <div class="row">
                 <div class="col-md-3" style="text-align:right;"> {{ _('Named Graph IRI:') }} </div>
-                <div class="col-md-3"><input type="text" name="graphIRI" value=""></div>
+                <div class="col-md-3"><input type="text" name="graphIRI" value="" required="required"></div>
                 <div class="col-md-3" style="text-align:left;">
                  <button class="btn btn-success" name="save" type="submit"><i class="fa fa-file"></i> {{ _('Push to RDF Store') }} </button>
                 </div>
