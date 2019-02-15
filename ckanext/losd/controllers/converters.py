@@ -135,33 +135,47 @@ class CSVConverter(BaseController):
             # file = open(filename ,'w+')
             try:
                 response = urllib2.urlopen(juma_url)
-            except Exception, e:
+            except Exception as e:
 
                 id = request.params.get('pkg_id', u'')
                 h.flash_error(_(e))
                 tk.redirect_to(controller='package', action='read', id=id)
 
             CHUNK = 16 * 1024
+
+            # CSO: Fix csv to rdf error #501
+            # https://github.com/derilinx/derilinx/issues/501
+            incorrect_info = False
+
             with open(filename, 'wb') as f:
                 while True:
                     chunk = response.read(CHUNK)
+                    if chunk == 'Error: Unable to find mapping file, ensure mappingID and userID is correct!':
+                        incorrect_info = True
+                        break
                     if not chunk:
                         break
                     f.write(chunk)
 
             # file.write(dataset_rdf)
-            losd.action.resource_create(
-                package_id=request.params.get('pkg_id', u''),
-                format='rdf',
-                name=request.params.get('newResourceName', u'') or 'rdf ' + resource_csv['name'],
-                description='RDF file converted using JUMA from CSV resource:' + resource_csv['name'],
-                upload=open(filename)
-            )
+            if incorrect_info:
+                id = request.params.get('pkg_id', u'')
+                h.flash_notice(_('Error: Unable to find mapping file, ensure mappingID and userID is correct!'))
+                tk.redirect_to(controller='package', action='read', id=id)
+            else:
+                losd.action.resource_create(
+                    package_id=request.params.get('pkg_id', u''),
+                    format='rdf',
+                    name=request.params.get('newResourceName', u'') or 'rdf ' + resource_csv['name'],
+                    description='RDF file converted using JUMA from CSV resource:' + resource_csv['name'],
+                    upload=open(filename)
+                )
+                id = request.params.get('pkg_id', u'')
+                h.flash_notice(_('A new RDF resource has been created.'))
+                tk.redirect_to(controller='package', action='read',
+                               id=id)
             os.remove(filename)
-            id = request.params.get('pkg_id', u'')
-            h.flash_notice(_('A new RDF resource has been created.'))
-            tk.redirect_to(controller='package', action='read',
-                           id=id)
+
         except NotFound:
 
             id = request.params.get('pkg_id', u'')
