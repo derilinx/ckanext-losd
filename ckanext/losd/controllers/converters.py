@@ -220,36 +220,61 @@ class RDFConverter(BaseController):
         push_url = rdfStoreURL + '/sparql-graph-crud-auth?graph-uri=' + graphIRI
 
         if not os.path.exists(filename):
-            raise FileExistsError
+            raise OSError
 
         try:
             # This is equivalent curl command
-            curl_result = os.popen('curl -X PUT/POST --digest -u "'+rdfStoreUser+':'+rdfStorePass+'" --url "'+ push_url
-                      + '" -T ' + filename).read()
+            #curl_result = os.popen('curl -X PUT/POST --digest -u "'+rdfStoreUser+':'+rdfStorePass+'" --url "'+ push_url
+                      #+ '" -T ' + filename).read()
+            #os.system('curl -X PUT/POST --digest -u "' + rdfStoreUser + ':' + rdfStorePass + '" --url "' + push_url
+                      #+ '" -T ' + filename)
 
-            if curl_result:
+            response = requests.post(push_url, data=open(filename, 'r').read(),
+                                     auth=HTTPDigestAuth(rdfStoreUser, rdfStorePass))
+
+            status_code = str(response.status_code)
+
+            if (status_code == '201') or (status_code == '200'):
+
                 self.remove_tmp_file(filename)
-                h.flash_error(_('RDF syntax error, please check the RDF file.'))
+                h.flash_notice(_('Push to RDF store is successful!'))
                 tk.redirect_to(controller='package', action='resource_read',
                                id=pkg_id, resource_id=resource_id)
-                sys.exit(1)
+                sys.exit(0)
 
-            self.remove_tmp_file(filename)
-            h.flash_notice(_('Please Note: No error response will be generated for invalid username and password. '
-                             'Please check the RDF store for the successful push'))
-            tk.redirect_to(controller='package', action='resource_read',
-                           id=pkg_id, resource_id=resource_id)
-            sys.exit(0)
+            elif status_code == '401':
 
-        except FileNotFoundError:
+                self.remove_tmp_file(filename)
+                h.flash_error(_('Invalid username or password!'))
+                tk.redirect_to(controller='package', action='resource_read',
+                               id=pkg_id, resource_id=resource_id)
+                sys.exit(0)
+
+            elif status_code == '500':
+
+                self.remove_tmp_file(filename)
+                h.flash_error(_('Invalid RDF syntax. Please validate RDF and retry!'))
+                tk.redirect_to(controller='package', action='resource_read',
+                               id=pkg_id, resource_id=resource_id)
+                sys.exit(0)
+
+            else:
+
+                self.remove_tmp_file(filename)
+                h.flash_error(_('Bad request! Please validate RDF file, username and password.'))
+                tk.redirect_to(controller='package', action='resource_read',
+                               id=pkg_id, resource_id=resource_id)
+                sys.exit(0)
+
+        except SystemError:
 
             self.remove_tmp_file(filename)
             h.flash_error(_('Please verify that RDF file (URL) exists.'))
             tk.redirect_to(controller='package', action='resource_read', id=pkg_id, resource_id=resource_id)
 
-        except FileExistsError:
+        except OSError:
 
             self.remove_tmp_file(filename)
             h.flash_error(_('Temporary file already exists. Please contact system administrator.'))
-            tk.redirect_to(controller='package', action='resource_read', id=pkg_id, resource_id=resource_id)'''
+            tk.redirect_to(controller='package', action='resource_read', id=pkg_id, resource_id=resource_id)
 
