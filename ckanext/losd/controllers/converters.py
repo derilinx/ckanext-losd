@@ -160,7 +160,7 @@ class CSVConverter(BaseController):
             # file.write(dataset_rdf)
             if incorrect_info:
                 id = request.params.get('pkg_id', u'')
-                h.flash_notice(_('Error: Unable to find mapping file, ensure mappingID and userID is correct!'))
+                h.flash_error(_('Error: Unable to find mapping file, ensure mappingID and userID is correct!'))
                 tk.redirect_to(controller='package', action='read', id=id)
             else:
                 losd.action.resource_create(
