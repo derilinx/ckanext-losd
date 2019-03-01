@@ -220,11 +220,11 @@ class RDFConverter(BaseController):
         resource_id = request.params.get('resource_id', u'')
         resource_rdf = losd.action.resource_show(id=resource_id)
         source_url = resource_rdf['url']
-        rdfStoreURL = request.params.get('storeURL', u'')
-        rdfStoreUser = request.params.get('userName', u'')
-        rdfStorePass = request.params.get('password', u'')
-        graphIRI = request.params.get('graphIRI', u'')
-        pkg_id = request.params.get('pkg_id', u'')
+        rdfStoreURL = request.params.get('storeURL', u'').strip()
+        rdfStoreUser = request.params.get('userName', u'').strip()
+        rdfStorePass = request.params.get('password', u'').strip()
+        graphIRI = request.params.get('graphIRI', u'').strip()
+        pkg_id = request.params.get('pkg_id', u'').strip()
 
         # Create a file for a given resource url
         if not temp_rdf_file_create(source_url):
@@ -267,7 +267,7 @@ class RDFConverter(BaseController):
             elif status_code == '500':
 
                 self.remove_tmp_file(filename)
-                h.flash_error(_('Invalid RDF syntax. Please validate RDF and retry!'))
+                h.flash_error(_('Invalid RDF file or Invalid graph uri. Please validate RDF or Graph URI!. Graph URI must be of type http://**'))
                 tk.redirect_to(controller='package', action='resource_read',
                                id=pkg_id, resource_id=resource_id)
                 sys.exit(0)
@@ -279,6 +279,26 @@ class RDFConverter(BaseController):
                 tk.redirect_to(controller='package', action='resource_read',
                                id=pkg_id, resource_id=resource_id)
                 sys.exit(0)
+
+        except requests.exceptions.HTTPError as http_error:
+            self.remove_tmp_file(filename)
+            h.flash_error(_('Invalid RDF file. Please check RDF syntax'))
+            tk.redirect_to(controller='package', action='resource_read', id=pkg_id, resource_id=resource_id)
+
+        except requests.exceptions.ConnectionError as connection_error:
+            self.remove_tmp_file(filename)
+            h.flash_error(_('Invalid RDF Store URL: Please verify Virtuoso RDF Store URL'))
+            tk.redirect_to(controller='package', action='resource_read', id=pkg_id, resource_id=resource_id)
+
+        except requests.exceptions.Timeout as time_out_error:
+            self.remove_tmp_file(filename)
+            h.flash_error(_('Error Connecting:' + str(time_out_error)))
+            tk.redirect_to(controller='package', action='resource_read', id=pkg_id, resource_id=resource_id)
+
+        except requests.exceptions.RequestException as unkown_error:
+            self.remove_tmp_file(filename)
+            h.flash_error(_('Unkown Error:' + str(unkown_error)))
+            tk.redirect_to(controller='package', action='resource_read', id=pkg_id, resource_id=resource_id)
 
         except SystemError:
 
