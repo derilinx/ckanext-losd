@@ -1,6 +1,14 @@
 {% if c.userobj.sysadmin %}
           {% set organizations = h.organizations_available() %}
 {% endif %}
+
+{% set juma_login = h.get_applications_host('HOST_JUMA')+"/juma-editor/login" %}
+{% set virtuoso_sparql = h.get_applications_host('HOST_VIR')+"/sparql" %}
+{% set cubiql = h.get_applications_host('HOST_VIR') %}
+{% set olap = h.get_applications_host('HOST_OLAP') %}
+{% set cube_viz = h.get_applications_host('HOST_CUBE') %}
+{% set moodle = h.get_applications_host('HOST_MOD')+"/moodle" %}
+
 <div role="main" id="front-page-hero" class="hero-unit">
   <div class="container">
     <div class="row row1">
@@ -15,7 +23,7 @@
   <div class="row">
     <div class="col-md-3 span3">
         <div class="card card1">
-          <a href="http://losd.staging.derilinx.com:8888/juma-editor/" target="_blank">
+          <a href="{{ juma_login }}" target="_blank">
             <i class="fa fa-cogs card-icon"></i>
             <p>Data converion using Juma</p>
           </a>
@@ -26,24 +34,24 @@
             <i class="fa fa-search card-icon"></i>
             <p>
             Querying our RDF Store using<br>
-            <a href="http://losd.staging.derilinx.com:8890/sparql" target="_blank">SPARQL</a>
-            or <a href="http://losd.staging.derilinx.com:8080/index.html" target="_blank">GraphQL</a>
+            <a href="{{ virtuoso_sparql }}" target="_blank">SPARQL</a>
+            or <a href="{{ cubiql }}" target="_blank">GraphQL</a>
             </p>
         </div>
     </div>
             <div class="col-md-3 span3">
-        <div class="card card3">
+            <div class="card card3">
             <i class="fa fa-search card-icon"></i>
             <p>
             Visualization and Analysis using<br>
-            <a href="http://losd.staging.derilinx.com:8084" target="_blank">OLAP Browser</a>
-            or <a href="http://losd.staging.derilinx.com:8083/" target="_blank">Cube Visualiser</a>
+            <a href="{{ olap }}" target="_blank">OLAP Browser</a>
+            or <a href="{{ cube_viz }}" target="_blank">Cube Visualiser</a>
             </p>
         </div>
     </div>
             <div class="col-md-3 span3">
         <div class="card card4">
-          <a href="http://losd.staging.derilinx.com/moodle" target="_blank">
+          <a href="{{ moodle }}" target="_blank">
             <i class="fa fa-book card-icon"></i>
             <p>Learning Platform</p>
           </a>

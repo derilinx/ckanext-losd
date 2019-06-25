@@ -18,7 +18,8 @@ class LosdPlugin(SingletonPlugin):
     def get_helpers(self):
         return {
             'supported_rdf_format': h.supported_rdf_format,
-            'get_org_widget_data': h.get_org_widget_data
+            'get_org_widget_data': h.get_org_widget_data,
+            'get_applications_host': h.get_applications_host
         }
 
     def before_map(self, map):

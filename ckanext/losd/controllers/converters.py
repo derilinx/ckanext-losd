@@ -127,7 +127,8 @@ class CSVConverter(BaseController):
             # read from juma
             jumaUser = request.params.get('jumaUser', u'')
             jumaMappingID = request.params.get('jumaMappingID', u'')
-            juma_url = 'http://losd.staging.derilinx.com:8889/juma-api?user=' + jumaUser + '&map=' + jumaMappingID + '&source=' + Source_URL
+            #juma_url = 'http://losd.staging.derilinx.com:8889/juma-api?user=' + jumaUser + '&map=' + jumaMappingID + '&source=' + Source_URL
+            juma_url = 'https://'+str(os.environ['HOST_JUMA'])+'/juma-api?user=' + jumaUser + '&map=' + jumaMappingID + '&source=' + Source_URL            
 
             # dataset_rdf = get_content(juma_url)
             # write to dataframe
