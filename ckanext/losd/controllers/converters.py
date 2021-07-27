@@ -1,315 +1,34 @@
 from ckan.lib.base import BaseController, render
-from ckanapi import LocalCKAN, NotFound, ValidationError
-import uuid
-from pyjstat import pyjstat
-import ckan.plugins.toolkit as tk
-import ckan.logic as logic
-import ckan.lib.helpers as h
-import os
-import urllib2
-import pycurl
-import ckan.lib.jobs as jobs
-from . import jsonstatToRDF_conv as RdfConv
-import requests
-from requests.auth import HTTPDigestAuth
-import json
+from ckan.plugins import toolkit
+from ckanext.losd import views_model
+import logging
 
-_ = tk._
-c = tk.c
-request = tk.request
-render = tk.render
-abort = tk.abort
-redirect = tk.redirect_to
-NotFound = tk.ObjectNotFound
-ValidationError = tk.ValidationError
-check_access = tk.check_access
-get_action = tk.get_action
-tuplize_dict = logic.tuplize_dict
-clean_dict = logic.clean_dict
-parse_params = logic.parse_params
-NotAuthorized = tk.NotAuthorized
-
-local_file_to_use_for_RDFStore = '/var/lib/ckan/storage/uploads/topushinRDFStore.ttl'
-
-
-def temp_rdf_file_create(source_url):
-    # create the url and the request
-
-    # Load the rdf file from the resource url
-
-    try:
-
-        source_rdf = urllib2.urlopen(source_url).read()
-        with open(local_file_to_use_for_RDFStore, "wb") as local_file:
-            local_file.write(source_rdf)
-            local_file.close()
-
-        # Loading the rdf file to temporary path is successful
-        return True
-
-    except Exception as e:
-
-        # False represents something wrong in opening a rdf resource or url
-        return False
-
-
-def get_content(url):
-    """ loads a webpage into a string """
-    src = ''
-
-    req = urllib2.Request(url)
-
-    try:
-        response = urllib2.urlopen(req)
-        chunk = True
-        while chunk:
-            chunk = response.read(1024)
-            src += chunk
-        response.close()
-    except IOError:
-        print
-        'can\'t open', url
-        return src
-
-    return src
+log = logging.getLogger(__name__)
 
 
 class CSVConverter(BaseController):
 
     def convertToCSV(self):
-
-        losd = LocalCKAN()
-
-        try:
-            resource_id = request.params.get('resource_id', u'')
-
-            print("\n\n\n\n\n\n\n")
-            print(request.params)
-
-            # dataset = losd.action.package_show(id=pkg_id)
-            resource_jsonstat = losd.action.resource_show(id=resource_id)
-
-            Source_URL = resource_jsonstat['url']
-
-            # read from json-stat
-            dataset_jsonStat = pyjstat.Dataset.read(Source_URL)
-
-            # write to dataframe
-            df = dataset_jsonStat.write('dataframe')
-            filename = '/var/lib/ckan/storage/uploads/' + unicode(uuid.uuid4()) + '.csv'
-            df.to_csv(filename, sep=',', encoding='utf-8', index=False)
-
-            losd.action.resource_create(
-                package_id=request.params.get('pkg_id', u''),
-                format='csv',
-                name='csv ' + resource_jsonstat['name'],
-                description='CSV file converted from json-stat resource:' + resource_jsonstat['name'],
-                upload=open(filename)
-            )
-            os.remove(filename)
-            id = request.params.get('pkg_id', u'')
-            h.flash_notice(_('A new CSV resource has been created.'))
-            tk.redirect_to(controller='package', action='read',
-                           id=id)
-        except NotFound:
-
-            print('not found')
+        result = views_model.convert_to_csv()
+        log.info(result)
+        toolkit.redirect_to(controller='package', action='read', id=result.get('id', ''))
 
     def convertToRDF(self):
-
-        losd = LocalCKAN()
-
-        try:
-            resource_id = request.params.get('resource_id', u'')
-            resource_csv = losd.action.resource_show(id=resource_id)
-            Source_URL = resource_csv['url']
-
-            # read from juma
-            jumaUser = request.params.get('jumaUser', u'')
-            jumaMappingID = request.params.get('jumaMappingID', u'')
-            #juma_url = 'http://losd.staging.derilinx.com:8889/juma-api?user=' + jumaUser + '&map=' + jumaMappingID + '&source=' + Source_URL
-            juma_url = 'https://'+str(os.environ['HOST_JUMA'])+'/juma-api?user=' + jumaUser + '&map=' + jumaMappingID + '&source=' + Source_URL            
-
-            # dataset_rdf = get_content(juma_url)
-            # write to dataframe
-            filename = '/var/lib/ckan/storage/uploads/' + unicode(uuid.uuid4()) + '.ttl'
-            # file = open(filename ,'w+')
-            try:
-                response = urllib2.urlopen(juma_url)
-            except Exception as e:
-
-                id = request.params.get('pkg_id', u'')
-                h.flash_error(_(e))
-                tk.redirect_to(controller='package', action='read', id=id)
-
-            CHUNK = 16 * 1024
-
-            # CSO: Fix csv to rdf error #501
-            # https://github.com/derilinx/derilinx/issues/501
-            incorrect_info = False
-
-            with open(filename, 'wb') as f:
-                while True:
-                    chunk = response.read(CHUNK)
-                    if chunk == 'Error: Unable to find mapping file, ensure mappingID and userID is correct!':
-                        incorrect_info = True
-                        break
-                    if not chunk:
-                        break
-                    f.write(chunk)
-
-            # file.write(dataset_rdf)
-            if incorrect_info:
-                id = request.params.get('pkg_id', u'')
-                h.flash_error(_('Error: Unable to find mapping file, ensure mappingID and userID is correct!'))
-                tk.redirect_to(controller='package', action='read', id=id)
-            else:
-                losd.action.resource_create(
-                    package_id=request.params.get('pkg_id', u''),
-                    format='rdf',
-                    name=request.params.get('newResourceName', u'') or 'rdf ' + resource_csv['name'],
-                    description='RDF file converted using JUMA from CSV resource:' + resource_csv['name'],
-                    upload=open(filename)
-                )
-                id = request.params.get('pkg_id', u'')
-                h.flash_notice(_('A new RDF resource has been created.'))
-                tk.redirect_to(controller='package', action='read',
-                               id=id)
-            os.remove(filename)
-
-        except NotFound:
-
-            id = request.params.get('pkg_id', u'')
-            h.flash_error(_('Something went wrong!.'))
-            tk.redirect_to(controller='package', action='read',
-                           id=id)
+        result = views_model.convert_to_rdf()
+        log.info(result)
+        toolkit.redirect_to(controller='package', action='read', id=result.get('id', ''))
 
 
 class RDFConverter(BaseController):
 
-    def remove_tmp_file(self, filename):
-
-        if os.path.isfile(filename):
-
-            os.remove(filename)
-
     def convertToRDFJobs(self):
-
-        """ This creates json-stat to rdf conversion as background jobs and appropriate message will appear.
-        Main conversion module is in the file controllers -> jsonstatToRDF.py file """
-
-        resource_id = request.params.get('resource_id', u'')
-        datasetid = request.params.get('datasetId', u'')
-        vocabulary_namespace = request.params.get('VocabNmSpace', u'')
-        data_namespace = request.params.get('DataNmSpace', u'')
-        pkg_id = request.params.get('pkg_id', u'')
-
-        job = jobs.enqueue(RdfConv.convertToRDF, [resource_id, datasetid, vocabulary_namespace, data_namespace, pkg_id])
-        task_id = job.id
-
-        #res = RdfConv.convertToRDF(resource_id, datasetid, vocabulary_namespace, data_namespace, pkg_id)
-
-        h.flash_notice(_('RDF file being created. Please visit the dataset page after few minutes. '
-                         'If you dont see the RDF file after a while, please contact administrator '
-                         'along with the Job id:'+task_id))
-        tk.redirect_to(controller='package', action='read', id=pkg_id)
+        result = views_model.convert_json_state_to_rdf()
+        log.info(result)
+        toolkit.redirect_to(controller='package', action='read', id=result.get('id', ''))
 
     def pushToRDFStore(self):
-
-        losd = LocalCKAN()
-
-        resource_id = request.params.get('resource_id', u'')
-        resource_rdf = losd.action.resource_show(id=resource_id)
-        source_url = resource_rdf['url']
-        rdfStoreURL = request.params.get('storeURL', u'').strip()
-        rdfStoreUser = request.params.get('userName', u'').strip()
-        rdfStorePass = request.params.get('password', u'').strip()
-        graphIRI = request.params.get('graphIRI', u'').strip()
-        pkg_id = request.params.get('pkg_id', u'').strip()
-
-        # Create a file for a given resource url
-        if not temp_rdf_file_create(source_url):
-            raise SystemError
-
-        filename = local_file_to_use_for_RDFStore
-        push_url = rdfStoreURL + '/sparql-graph-crud-auth?graph-uri=' + graphIRI
-
-        if not os.path.exists(filename):
-            raise OSError
-
-        try:
-            # This is equivalent curl command
-            #curl_result = os.popen('curl -X PUT/POST --digest -u "'+rdfStoreUser+':'+rdfStorePass+'" --url "'+ push_url
-                      #+ '" -T ' + filename).read()
-            #os.system('curl -X PUT/POST --digest -u "' + rdfStoreUser + ':' + rdfStorePass + '" --url "' + push_url
-                      #+ '" -T ' + filename)
-
-            response = requests.post(push_url, data=open(filename, 'r').read(),
-                                     auth=HTTPDigestAuth(rdfStoreUser, rdfStorePass))
-
-            status_code = str(response.status_code)
-
-            if (status_code == '201') or (status_code == '200'):
-
-                self.remove_tmp_file(filename)
-                h.flash_notice(_('Push to RDF store is successful!'))
-                tk.redirect_to(controller='package', action='resource_read',
-                               id=pkg_id, resource_id=resource_id)
-                sys.exit(0)
-
-            elif status_code == '401':
-
-                self.remove_tmp_file(filename)
-                h.flash_error(_('Invalid username or password!'))
-                tk.redirect_to(controller='package', action='resource_read',
-                               id=pkg_id, resource_id=resource_id)
-                sys.exit(0)
-
-            elif status_code == '500':
-
-                self.remove_tmp_file(filename)
-                h.flash_error(_('Invalid RDF file or Invalid graph uri. Please validate RDF or Graph URI!. Graph URI must be of type http://**'))
-                tk.redirect_to(controller='package', action='resource_read',
-                               id=pkg_id, resource_id=resource_id)
-                sys.exit(0)
-
-            else:
-
-                self.remove_tmp_file(filename)
-                h.flash_error(_('Bad request! Please validate RDF file, username and password.'))
-                tk.redirect_to(controller='package', action='resource_read',
-                               id=pkg_id, resource_id=resource_id)
-                sys.exit(0)
-
-        except requests.exceptions.HTTPError as http_error:
-            self.remove_tmp_file(filename)
-            h.flash_error(_('Invalid RDF file. Please check RDF syntax'))
-            tk.redirect_to(controller='package', action='resource_read', id=pkg_id, resource_id=resource_id)
-
-        except requests.exceptions.ConnectionError as connection_error:
-            self.remove_tmp_file(filename)
-            h.flash_error(_('Invalid RDF Store URL: Please verify Virtuoso RDF Store URL'))
-            tk.redirect_to(controller='package', action='resource_read', id=pkg_id, resource_id=resource_id)
-
-        except requests.exceptions.Timeout as time_out_error:
-            self.remove_tmp_file(filename)
-            h.flash_error(_('Error Connecting:' + str(time_out_error)))
-            tk.redirect_to(controller='package', action='resource_read', id=pkg_id, resource_id=resource_id)
-
-        except requests.exceptions.RequestException as unkown_error:
-            self.remove_tmp_file(filename)
-            h.flash_error(_('Unkown Error:' + str(unkown_error)))
-            tk.redirect_to(controller='package', action='resource_read', id=pkg_id, resource_id=resource_id)
-
-        except SystemError:
-
-            self.remove_tmp_file(filename)
-            h.flash_error(_('Please verify that RDF file (URL) exists.'))
-            tk.redirect_to(controller='package', action='resource_read', id=pkg_id, resource_id=resource_id)
-
-        except OSError:
-
-            self.remove_tmp_file(filename)
-            h.flash_error(_('Temporary file already exists. Please contact system administrator.'))
-            tk.redirect_to(controller='package', action='resource_read', id=pkg_id, resource_id=resource_id)
-
+        result = views_model.push_to_rdf_store()
+        log.info(result)
+        resource_id = result.get('resource_id', '')
+        package_id = result.get('package_id', '')
+        toolkit.redirect_to(controller='package', action='resource_read', id=package_id, resource_id=resource_id)
