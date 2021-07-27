@@ -21,7 +21,7 @@ class LosdMixinPlugin(p.SingletonPlugin):
                     controller='ckanext.losd.controllers.converters:RDFConverter', action='pushToRDFStore')
         map.connect('jsonstattordf', '/converter/jsonstattordf/{id}/{resource_id}',
                     controller='ckanext.losd.controllers.converters:RDFConverter', action='convertToRDFJobs')
-        map.connect('updatehomeorg', '/updatehomeorg/{org_1}/{org_2}/{org_3}/{org_4}',
+        map.connect('updatehomeorg', '/converter/updatehomeorg/{org_1}/{org_2}/{org_3}/{org_4}',
                     controller='ckanext.losd.controllers.update_home_org:UpdateHomeOrganization',
                     action='update_home_org')
 
