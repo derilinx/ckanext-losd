@@ -1,0 +1,237 @@
+{% if c.userobj.sysadmin %}
+          {% set organizations = h.organizations_available() %}
+{% endif %}
+
+{% set juma_login = h.get_applications_host('HOST_JUMA')+"/juma-editor/login" %}
+{% set virtuoso_sparql = h.get_applications_host('HOST_VIR')+"/sparql" %}
+{% set cubiql = h.get_applications_host('HOST_VIR') %}
+{% set olap = h.get_applications_host('HOST_OLAP') %}
+{% set cube_viz = h.get_applications_host('HOST_CUBE') %}
+{% set moodle = h.get_applications_host('HOST_MOD')+"/moodle" %}
+
+<div role="main" id="front-page-hero" class="hero-unit">
+  <div class="container">
+    <div class="row row1">
+        {% block promoted %}
+          {% snippet 'home/snippets/promoted.html' %}
+        {% endblock %}
+    </div>
+  </div>
+</div>
+
+<div class="container" style="margin-top: 10px;">
+  <div class="row">
+    <div class="col-md-3 span3">
+        <div class="card card1">
+          <a href="{{ juma_login }}" target="_blank">
+            <i class="fa fa-cogs card-icon"></i>
+            <p>Data converion using Juma</p>
+          </a>
+        </div>
+    </div>
+            <div class="col-md-3 span3">
+        <div class="card card2">
+            <i class="fa fa-search card-icon"></i>
+            <p>
+            Querying our RDF Store using<br>
+            <a href="{{ virtuoso_sparql }}" target="_blank">SPARQL</a>
+            or <a href="{{ cubiql }}" target="_blank">GraphQL</a>
+            </p>
+        </div>
+    </div>
+            <div class="col-md-3 span3">
+            <div class="card card3">
+            <i class="fa fa-search card-icon"></i>
+            <p>
+            Visualization and Analysis using<br>
+            <a href="{{ olap }}" target="_blank">OLAP Browser</a>
+            or <a href="{{ cube_viz }}" target="_blank">Cube Visualiser</a>
+            </p>
+        </div>
+    </div>
+            <div class="col-md-3 span3">
+        <div class="card card4">
+          <a href="{{ moodle }}" target="_blank">
+            <i class="fa fa-book card-icon"></i>
+            <p>Learning Platform</p>
+          </a>
+        </div>
+    </div>
+  </div>
+</div>
+{% set org_widget = h.get_org_widget_data() %}
+  <div class="container">
+    <div class="row row3">
+      <div class="col-md-6 span6 col1">
+        {% set org_1 = h.get_organization(org_widget['org_1'],include_datasets=True) %}
+
+          {% if c.userobj.sysadmin %}
+          <div class="control-group">
+      <label for="field-organizations-a" class="control-label">{{ _('Organization 1') }}</label>
+      <div class="controls">
+        <select id="field-organizations-a" name="owner_org" data-module="autocomplete">
+
+            {% for organization in organizations %}
+                {% if organization.id == org_widget['org_1'] %}
+                    {% set selected_org1 = "True" %}
+                    <option value="{{ organization.id }}" selected="selected">{{ organization.title }}</option>
+                {% else %}
+                    <option value="{{ organization.id }}">{{ organization.title }}</option>
+                {% endif %}
+            {% endfor %}
+
+            {% if org_widget['org_1'] == "na" %}
+                <option value="na" selected="selected">{{ _('No organization') }}</option>
+            {% else %}
+                <option value="na">{{ _('No organization') }}</option>
+            {% endif %}
+
+        </select>
+      </div>
+    </div>
+          {% endif %}
+
+        <div class="box">
+          {% snippet 'snippets/organization_item.html', organization=org_1, truncate=50, truncate_title=35 %}
+        </div>
+      </div>
+
+      <div class="col-md-6 span6 col2">
+        {% set org_2 = h.get_organization(org_widget['org_2'],include_datasets=True) %}
+
+          {% if c.userobj.sysadmin %}
+          <div class="control-group">
+      <label for="field-organizations-b" class="control-label">{{ _('Organization 2') }}</label>
+      <div class="controls">
+        <select id="field-organizations-b" name="owner_org" data-module="autocomplete">
+
+            {% for organization in organizations %}
+                {% if organization.id == org_widget['org_2'] %}
+                    {% set selected_org1 = "True" %}
+                    <option value="{{ organization.id }}" selected="selected">{{ organization.title }}</option>
+                {% else %}
+                    <option value="{{ organization.id }}">{{ organization.title }}</option>
+                {% endif %}
+            {% endfor %}
+
+            {% if org_widget['org_2'] == "na" %}
+                <option value="na" selected="selected">{{ _('No organization') }}</option>
+            {% else %}
+                <option value="na">{{ _('No organization') }}</option>
+            {% endif %}
+
+        </select>
+      </div>
+    </div>
+          {% endif %}
+
+        <div class="box">
+          {% snippet 'snippets/organization_item.html', organization=org_2, truncate=50, truncate_title=35 %}
+        </div>
+      </div>
+    </div>
+    <div class="row row4">
+
+      <div class="col-md-6 span6 col1" style="margin-top:20px;">
+        {% set org_3 = h.get_organization(org_widget['org_3'],include_datasets=True) %}
+
+          {% if c.userobj.sysadmin %}
+          <div class="control-group">
+      <label for="field-organizations-c" class="control-label">{{ _('Organization 3') }}</label>
+      <div class="controls">
+        <select id="field-organizations-c" name="owner_org" data-module="autocomplete">
+
+            {% for organization in organizations %}
+                {% if organization.id == org_widget['org_3'] %}
+                    {% set selected_org1 = "True" %}
+                    <option value="{{ organization.id }}" selected="selected">{{ organization.title }}</option>
+                {% else %}
+                    <option value="{{ organization.id }}">{{ organization.title }}</option>
+                {% endif %}
+            {% endfor %}
+
+            {% if org_widget['org_3'] == "na" %}
+                <option value="na" selected="selected">{{ _('No organization') }}</option>
+            {% else %}
+                <option value="na">{{ _('No organization') }}</option>
+            {% endif %}
+
+        </select>
+      </div>
+    </div>
+          {% endif %}
+
+        <div class="box">
+          {% snippet 'snippets/organization_item.html', organization=org_3, truncate=50, truncate_title=35 %}
+        </div>
+      </div>
+
+      <div class="col-md-6 span6 col2" style="margin-top:20px;">
+        {% set org_4 = h.get_organization(org_widget['org_4'],include_datasets=True) %}
+
+          {% if c.userobj.sysadmin %}
+          <div class="control-group">
+      <label for="field-organizations-d" class="control-label">{{ _('Organization 4') }}</label>
+      <div class="controls">
+        <select id="field-organizations-d" name="owner_org" data-module="autocomplete">
+
+            {% for organization in organizations %}
+                {% if organization.id == org_widget['org_4'] %}
+                    {% set selected_org1 = "True" %}
+                    <option value="{{ organization.id }}" selected="selected">{{ organization.title }}</option>
+                {% else %}
+                    <option value="{{ organization.id }}">{{ organization.title }}</option>
+                {% endif %}
+            {% endfor %}
+
+            {% if org_widget['org_4'] == "na" %}
+                <option value="na" selected="selected">{{ _('No organization') }}</option>
+            {% else %}
+                <option value="na">{{ _('No organization') }}</option>
+            {% endif %}
+
+        </select>
+      </div>
+    </div>
+          {% endif %}
+
+        <div class="box">
+          {% snippet 'snippets/organization_item.html', organization=org_4, truncate=50, truncate_title=35 %}
+        </div>
+      </div>
+    </div>
+
+      {% if c.userobj.sysadmin %}
+      <div class="row row5">
+          <div class="col-md-5"></div>
+          <div class="col-md-2"><a href="javascript:update_home_org()" class="btn btn-primary btn-m" role="button" id="update_org" aria-disabled="true">Update Organizations</a></div>
+          <div class="col-md-5"></div>
+      </div>
+      {% endif %}
+
+  </div>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script>
+function update_home_org(){
+
+    console.log(2);
+
+    var org_1 = document.getElementById("field-organizations-a").value;
+    var org_2 = document.getElementById("field-organizations-b").value;
+    var org_3 = document.getElementById("field-organizations-c").value;
+    var org_4 = document.getElementById("field-organizations-d").value;
+
+    console.log("/updatehomeorg/"+org_1+"/"+org_2+"/"+org_3+"/"+org_4);
+
+        $.ajax({
+        type: 'GET',
+        url: "/updatehomeorg/"+org_1+"/"+org_2+"/"+org_3+"/"+org_4,
+        async:false
+        }).done(function(data){
+            console.log(data);
+        });
+
+        location.reload();
+
+   }
+</script>

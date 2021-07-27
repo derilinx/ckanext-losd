@@ -24,24 +24,20 @@ def prefix_build_concept(data_namespace_prefix, data_field_nm):
 
 
 def urlize(*args):
-
     """
     Url builder for codel ist concept and scheme
     """
-
     return "csod" + "/".join(map(_cleanString, args))
 
 
-def namespace_vocabspace_validator(string):
-
+def namespace_vocabspace_validator(nm_space):
     """
     To validate the the namespace and vocabulary space links if it dosent ends with "/"
     """
+    if list(nm_space)[-1] != "/":
+        nm_space = nm_space + "/"
 
-    if list(string)[-1] != "/":
-        string = string + "/"
-
-    return string
+    return nm_space
 
 
 def convertToRDF(resource_id, datasetid, vocabulary_namespace, data_namespace, pkg_id):

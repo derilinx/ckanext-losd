@@ -7,6 +7,7 @@ from ckanext.losd import jsonstatToRDF_conv as RdfConv
 from pyjstat import pyjstat
 import requests
 from requests.auth import HTTPDigestAuth
+import uuid
 import json
 import os
 import urllib2
@@ -48,7 +49,7 @@ def error_handler(func):
     def handler(*args, **kwargs):
         result = {
                 "success": "",
-                "id": toolkit.request.params.get('pkg_id', u''),
+                "id": '',
                 "error": ""
             }
         try:
@@ -66,27 +67,23 @@ def error_handler(func):
         if result.get('error', ''):
             h.flash_error(result.get('error', ''))
         else:
-            h.flash_notice(result.get('success', ''))
+            h.flash_notice(result.get('success', '') or result.get('message', ''))
         return result
 
     return handler
 
 
 @error_handler
-def convert_to_csv():
+def convert_to_csv(id, resource_id):
     """
     Convert rdf to csv
     :return:
     """
-
     context = {
         'model': model,
         'session': model.Session,
         'user': c.user
     }
-
-    resource_id = toolkit.request.params.get('resource_id', u'')
-    log.info(toolkit.request.params)
 
     if not resource_id:
         raise toolkit.ValidationError("No resource id given")
@@ -104,7 +101,7 @@ def convert_to_csv():
     df.to_csv(filename, sep=',', encoding='utf-8', index=False)
 
     toolkit.get_action('resource_create')(context, {
-        "package_id": toolkit.request.params.get('pkg_id', u''),
+        "package_id": id,
         "format": "csv",
         "name": 'csv ' + resource_jsonstat.get('name', ''),
         "decription": 'CSV file converted from json-stat resource:' + resource_jsonstat.get('name', ''),
@@ -113,13 +110,13 @@ def convert_to_csv():
     os.remove(filename)
     return {
         "success": toolkit._('A new CSV resource has been created.'),
-        "id": toolkit.request.params.get('pkg_id', u''),
+        "id": id,
         "error": ""
     }
 
 
 @error_handler
-def convert_to_rdf():
+def convert_to_rdf(id, resource_id):
 
     context = {
         'model': model,
@@ -127,13 +124,12 @@ def convert_to_rdf():
         'user': c.user
     }
 
-    resource_id = toolkit.request.params.get('resource_id', u'')
     resource_csv = toolkit.get_action('resource_show')(context, {"id": resource_id})
     Source_URL = resource_csv['url']
 
     # read from juma
-    jumaUser = toolkit.request.params.get('jumaUser', u'')
-    jumaMappingID = toolkit.request.params.get('jumaMappingID', u'')
+    jumaUser = toolkit.request.params.get('jumaUser', u'') or toolkit.request.form.get('jumaUser', u'')
+    jumaMappingID = toolkit.request.params.get('jumaMappingID', u'') or toolkit.request.form.get('jumaMappingID', u'')
     juma_url = 'https://'+str(os.environ['HOST_JUMA'])+'/juma-api?user=' + jumaUser + '&map=' + jumaMappingID + '&source=' + Source_URL
 
     # write to dataframe
@@ -144,7 +140,7 @@ def convert_to_rdf():
         log.error(e)
         return {
             "error": toolkit._('Error while getting the data from url: {}'.format(juma_url)),
-            "id": toolkit.request.params.get('pkg_id', u''),
+            "id": id,
             "success": ""
         }
 
@@ -165,14 +161,15 @@ def convert_to_rdf():
     if incorrect_info:
         return {
             "error": toolkit._('Error: Unable to find mapping file, ensure mappingID and userID is correct!'),
-            "id": toolkit.request.params.get('pkg_id', u''),
+            "id": id,
             "success": ""
         }
     else:
+        _title = toolkit.request.params.get('newResourceName', u'') or toolkit.request.form.get('newResourceName', u'')
         toolkit.get_action('resource_create')(context, {
-            "package_id": toolkit.request.params.get('pkg_id', u''),
+            "package_id": id,
             "format": "rdf",
-            "name": toolkit.request.params.get('newResourceName', u'') or 'rdf ' + resource_csv.get('name', ''),
+            "name": _title or 'rdf ' + resource_csv.get('name', ''),
             "description": 'RDF file converted using JUMA from CSV resource:' + resource_csv.get('name', ''),
             "upload": open(filename)
         })
@@ -180,35 +177,33 @@ def convert_to_rdf():
     os.remove(filename)
     return {
         "success": toolkit._('A new RDF resource has been created.'),
-        "id": toolkit.request.params.get('pkg_id', u''),
+        "id": id,
         "error": ""
     }
 
 
-def convert_json_state_to_rdf():
+def convert_json_state_to_rdf(id, resource_id):
     """
     This creates json-stat to rdf conversion as background jobs and appropriate message will appear.
     Main conversion module is in the file controllers -> jsonstatToRDF.py file
     """
-    resource_id = toolkit.request.params.get('resource_id', u'')
-    datasetid = toolkit.request.params.get('datasetId', u'')
-    vocabulary_namespace = toolkit.request.params.get('VocabNmSpace', u'')
-    data_namespace = toolkit.request.params.get('DataNmSpace', u'')
-    pkg_id = toolkit.request.params.get('pkg_id', u'')
+    datasetid = toolkit.request.params.get('datasetId', u'') or toolkit.request.form.get('datasetId', u'')
+    vocabulary_namespace = toolkit.request.params.get('VocabNmSpace', u'') or toolkit.request.form.get('VocabNmSpace', u'')
+    data_namespace = toolkit.request.params.get('DataNmSpace', u'') or toolkit.request.form.get('DataNmSpace', u'')
 
-    job = jobs.enqueue(RdfConv.convertToRDF, [resource_id, datasetid, vocabulary_namespace, data_namespace, pkg_id])
+    job = jobs.enqueue(RdfConv.convertToRDF, [resource_id, datasetid, vocabulary_namespace, data_namespace, id])
     task_id = job.id
 
     return {
         "message": toolkit._('RDF file being created. Please visit the dataset page after few minutes. '
                              'If you dont see the RDF file after a while, please contact administrator '
                              'along with the Job id:'+task_id),
-        "id": pkg_id
+        "id": id
     }
 
 
 @error_handler
-def push_to_rdf_store():
+def push_to_rdf_store(id, resource_id):
 
     context = {
         'model': model,
@@ -216,20 +211,18 @@ def push_to_rdf_store():
         'user': c.user
     }
 
-    resource_id = toolkit.request.params.get('resource_id', u'')
     resource_rdf = toolkit.get_action('resource_show')(context, {"id": resource_id})
     source_url = resource_rdf['url']
-    rdfStoreURL = toolkit.request.params.get('storeURL', u'').strip()
-    rdfStoreUser = toolkit.request.params.get('userName', u'').strip()
-    rdfStorePass = toolkit.request.params.get('password', u'').strip()
-    graphIRI = toolkit.request.params.get('graphIRI', u'').strip()
-    pkg_id = toolkit.request.params.get('pkg_id', u'').strip()
+    rdfStoreURL = toolkit.request.params.get('storeURL', u'').strip() or toolkit.request.form.get('storeURL', u'').strip()
+    rdfStoreUser = toolkit.request.params.get('userName', u'').strip() or toolkit.request.form.get('userName', u'').strip()
+    rdfStorePass = toolkit.request.params.get('password', u'').strip() or toolkit.request.form.get('password', u'').strip()
+    graphIRI = toolkit.request.params.get('graphIRI', u'').strip() or toolkit.request.form.get('graphIRI', u'').strip()
 
     result = {
         "success": "",
         "error": "",
         "resource_id": resource_id,
-        "package_id": pkg_id
+        "package_id": id
     }
 
     # Create a file for a given resource url

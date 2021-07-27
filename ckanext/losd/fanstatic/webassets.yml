@@ -1,0 +1,4 @@
+losd_css:
+  output: ckanext-losd/%(version)s_losd_css.css
+  contents:
+    - losd.css

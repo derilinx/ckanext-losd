@@ -1,6 +1,9 @@
 from flask import Blueprint, make_response
 from ckanext.losd import views_model
 from ckan.plugins import toolkit
+import logging
+
+log = logging.getLogger(__name__)
 
 converter = Blueprint(
     'converter',
@@ -10,30 +13,28 @@ converter = Blueprint(
 )
 
 
-def convert_to_csv_view(package_type, id):
-    result = views_model.convert_to_csv()
+def convert_to_csv_view(package_type, id, resource_id):
+    result = views_model.convert_to_csv(id, resource_id)
     log.info(result)
-    return toolkit.redirect_to('{}.read'.format(package_type), id=result.get('id', ''))
+    return toolkit.redirect_to('{}.read'.format(package_type), id=id)
 
 
-def convert_to_rdf_view(package_type, id):
-    result = views_model.convert_to_rdf()
+def convert_to_rdf_view(package_type, id, resource_id):
+    result = views_model.convert_to_rdf(id, resource_id)
     log.info(result)
-    return toolkit.redirect_to('{}.read'.format(package_type), id=result.get('id', ''))
+    return toolkit.redirect_to('{}.read'.format(package_type), id=id)
 
 
-def convert_json_state_to_rdf_view(package_type, id):
-    result = views_model.convert_json_state_to_rdf()
+def convert_json_state_to_rdf_view(package_type, id, resource_id):
+    result = views_model.convert_json_state_to_rdf(id, resource_id)
     log.info(result)
-    return toolkit.redirect_to('{}.read'.format(package_type), id=result.get('id', ''))
+    return toolkit.redirect_to('{}.read'.format(package_type), id=id)
 
 
-def push_to_rdf_store_view(package_type, id):
-    result = views_model.push_to_rdf_store()
+def push_to_rdf_store_view(package_type, id, resource_id):
+    result = views_model.push_to_rdf_store(id, resource_id)
     log.info(result)
-    resource_id = result.get('resource_id', '')
-    package_id = result.get('package_id', '')
-    return toolkit.redirect_to('resource.read', id=package_id, resource_id=resource_id)
+    return toolkit.redirect_to('resource.read', id=id, resource_id=resource_id)
 
 
 def update_home_org_view(package_type, org_1, org_2, org_3, org_4):
@@ -41,20 +42,20 @@ def update_home_org_view(package_type, org_1, org_2, org_3, org_4):
 
 
 converter.add_url_rule(
-    u'/converttocsv/<id>', view_func=convert_to_csv_view
+    u'/converttocsv/<id>/<resource_id>', view_func=convert_to_csv_view, methods=['POST']
 )
 
 converter.add_url_rule(
-    u'/converttordf/<id>', view_func=convert_to_rdf_view
+    u'/converttordf/<id>/<resource_id>', view_func=convert_to_rdf_view, methods=['POST']
 )
 converter.add_url_rule(
-    u'/pushtordfstore/<id>', view_func=push_to_rdf_store_view
-)
-
-converter.add_url_rule(
-    u'/jsonstattordf/<id>', view_func=convert_json_state_to_rdf_view
+    u'/pushtordfstore/<id>/<resource_id>', view_func=push_to_rdf_store_view, methods=['POST']
 )
 
 converter.add_url_rule(
-    u'/updatehomeorg/<org_1>/<org_2>/<org_3>/<org_4>', view_func=update_home_org_view
+    u'/jsonstattordf/<id>/<resource_id>', view_func=convert_json_state_to_rdf_view, methods=['POST']
+)
+
+converter.add_url_rule(
+    u'/updatehomeorg/<org_1>/<org_2>/<org_3>/<org_4>', view_func=update_home_org_view, methods=['POST']
 )

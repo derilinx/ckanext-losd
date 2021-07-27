@@ -1,0 +1,32 @@
+{% ckan_extends %}
+
+    {% block organization_item_header %}
+      <header class="module-heading home-heading">
+        {% block organization_item_header_image %}
+        <a class="module-image" href="{{ url }}">
+          <img src="{{ organization.image_display_url or h.url_for_static('/base/images/placeholder-organization.png') }}" alt="{{ organization.name }}" />
+        </a>
+        {% endblock %}
+
+        {% block organization_item_header_title %}
+            {% if organization.title or organization.name %}
+              <h3 class="media-heading"><a href={{ url }}>{{ organization.title or organization.name }}</a></h3>
+            {% else %}
+              <h3 class="media-heading"><a href="#">{{ 'No Organization Selected' }}</a></h3>
+            {% endif %}
+        {% endblock %}
+
+        {% block organization_item_header_description %}
+          {% if organization.description %}
+            {% if truncate == 0 %}
+              <p>{{ h.markdown_extract(organization.description)|urlize }}</p>
+            {% else %}
+              <p>{{ h.markdown_extract(organization.description, truncate)|urlize }}</p>
+            {% endif %}
+          {% else %}
+            <p>Please select the organization from drop down.</p>
+          {% endif %}
+        {% endblock %}
+
+      </header>
+    {% endblock %}

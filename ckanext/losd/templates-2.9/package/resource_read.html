@@ -9,7 +9,7 @@
 
 {% block resource_actions_inner %}
 
-  {% set action = h.url_for(controller='ckanext.losd.controllers.converters:CSVConverter', action='convertToCSV', id=pkg.name, resource_id=res.id) %}
+  {% set action = h.url_for('converter.convert_to_csv_view', id=pkg.name, resource_id=res.id) %}
     {{super()}}
         {% if 'json-stat' in (res.format).lower() and h.check_access('package_update', {'id':pkg.id }) %}
 
@@ -31,7 +31,7 @@
         {% if 'csv' in (res.format).lower() and h.check_access('package_update', {'id':pkg.id }) %}
 <div class="module-content box" id="rdf_to_csv">
 <h2> {{ _('Convert this resouce to RDF') }} </h2>
-	{% set actionRDF =h.url_for(controller='ckanext.losd.controllers.converters:CSVConverter', action='convertToRDF', id=pkg.name, resource_id=res.id) %}
+	{% set actionRDF = h.url_for('converter.convert_to_rdf_view', id=pkg.name, resource_id=res.id) %}
         <p>{{ _('You can convert this resource to RDF by giving the following details and clicking on the "Convert to RDF" button' ) }}</p>
 
   <form method="post" action="{{ actionRDF }}" >
@@ -58,7 +58,7 @@
         {% if 'rdf' in (res.format).lower() and h.check_access('package_update', {'id':pkg.id }) %}
 <div class="module-content box" id="push_resource_rdfstore">
 <h2> {{ _('Push this resource to RDF Store') }} </h2>
-        {% set actionPushToStore = h.url_for(controller='ckanext.losd.controllers.converters:RDFConverter', action='pushToRDFStore', id=pkg.name, resource_id=res.id) %}
+        {% set actionPushToStore = h.url_for('converter.push_to_rdf_store_view', id=pkg.name, resource_id=res.id) %}
         <p>{{ _('You can push this resource to a Virtuoso RDF Store by giving the following details and clicking on the "Push to RDF Store" button' ) }}</p>
 
   <form method="post" action="{{ actionPushToStore }}" >
@@ -88,7 +88,7 @@
 {% if 'json-stat' in (res.format).lower() and h.check_access('package_update', {'id':pkg.id }) %}
 <div class="module-content box" id="jason_stat_to_rdf">
 <h2> {{ _('Convert this resouce to RDF') }} </h2>
-	{% set actionRDF = h.url_for(controller='ckanext.losd.controllers.converters:RDFConverter', action='convertToRDFJobs', id=pkg.name, resource_id=res.id) %}
+	{% set actionRDF = h.url_for('converter.convert_json_state_to_rdf_view', id=pkg.name, resource_id=res.id) %}
         <p>{{ _('You can convert this resource to RDF by giving the following details and clicking on the "Convert to RDF" button' ) }}</p>
 
   <form method="post" action="{{ actionRDF }}" >

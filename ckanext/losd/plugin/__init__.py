@@ -17,11 +17,6 @@ class LosdPlugin(LosdMixinPlugin):
     p.implements(p.IRoutes, inherit=True)
     p.implements(p.ITemplateHelpers)
 
-    def update_config(self, config_):
-        toolkit.add_template_directory(config_, '../templates')
-        toolkit.add_public_directory(config_, '../public')
-        toolkit.add_resource('../fanstatic', 'losd')
-
     def get_helpers(self):
         return {
             'supported_rdf_format': h.supported_rdf_format,
