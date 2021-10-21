@@ -190,14 +190,12 @@ def convert_json_state_to_rdf(id, resource_id):
     datasetid = toolkit.request.params.get('datasetId', u'') or toolkit.request.form.get('datasetId', u'')
     vocabulary_namespace = toolkit.request.params.get('VocabNmSpace', u'') or toolkit.request.form.get('VocabNmSpace', u'')
     data_namespace = toolkit.request.params.get('DataNmSpace', u'') or toolkit.request.form.get('DataNmSpace', u'')
-
-    job = jobs.enqueue(RdfConv.convertToRDF, [resource_id, datasetid, vocabulary_namespace, data_namespace, id])
-    task_id = job.id
-
+    result = RdfConv.convertToRDF(resource_id, datasetid, vocabulary_namespace, data_namespace, id)
+    message = "Something went wrong"
+    if result and "Message" in result:
+        message = result.get('Message', "")
     return {
-        "message": toolkit._('RDF file being created. Please visit the dataset page after few minutes. '
-                             'If you dont see the RDF file after a while, please contact administrator '
-                             'along with the Job id:'+task_id),
+        "message": toolkit._(message),
         "id": id
     }
 

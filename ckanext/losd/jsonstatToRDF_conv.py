@@ -1,12 +1,17 @@
-
-from ckanapi import LocalCKAN, NotFound, ValidationError
 import urllib2
 import json
 from tempfile import NamedTemporaryFile
 import string
 import re
 import uuid
+import logging
 from collections import OrderedDict
+from ckan.plugins import toolkit
+import ckan.model as model
+from werkzeug import FileStorage
+from ckan.common import c
+
+log = logging.getLogger(__name__)
 
 
 def _cleanString(s):
@@ -44,7 +49,13 @@ def convertToRDF(resource_id, datasetid, vocabulary_namespace, data_namespace, p
 
     """ This is used to call a specific function based on the version of json stat source."""
 
-    losd = LocalCKAN()
+    context = {
+        u'model': model,
+        u'session': model.Session,
+        u'user': c.user,
+        u'for_view': True,
+        u'with_private': False
+    }
 
     job_result = {}
 
@@ -56,16 +67,13 @@ def convertToRDF(resource_id, datasetid, vocabulary_namespace, data_namespace, p
     # Data namespace prefix
     data_namespace_prefix = "losdd"
 
-    resource_jsonstat = losd.action.resource_show(id=resource_id)
+    resource_jsonstat = toolkit.get_action('resource_show')(context, {"id": resource_id})
     source_url = resource_jsonstat['url']
 
     # read from json-stat from a url
     source_json = json.loads(urllib2.urlopen(source_url).read(), object_pairs_hook=OrderedDict)
 
     def conversion_for_old_jstat_version():
-
-        losd = LocalCKAN()
-
 
         scheme = [
             '@prefix qb: <http://purl.org/linked-data/cube#> .'
@@ -223,30 +231,21 @@ def convertToRDF(resource_id, datasetid, vocabulary_namespace, data_namespace, p
                 out_file.write(''.join(scheme))
                 out_file.write(''.join(code_list))
                 out_file.write(''.join(observations))
+                out_file.close()
 
-            try:
+            log.info("Creating a rdf resource asdadad")
+            toolkit.get_action("resource_create")(context, {
+                "package_id": pkg_id,
+                "format": "rdf",
+                "name": 'RDF ' + str(datasetid),
+                "description": 'RDF file converted from Json-Stat resource: ' + resource_jsonstat['name'],
+                "upload": FileStorage(open(turtle_file.name), str(uuid.uuid4()))
+            })
 
-                losd.action.resource_create(
-                    package_id=pkg_id,
-                    format='rdf',
-                    name='RDF ' + str(datasetid),
-                    description='RDF file converted from Json-Stat resource: ' + resource_jsonstat['name'],
-                    upload=open(turtle_file.name)
-                )
-
-                turtle_file.file.close()
-
-            except Exception as e:
-
-                job_result['status'] = "Failed"
-                job_result['Error'] = str(e)
-                job_result['version'] = "old"
-                job_result['Message'] = "Something went while uploading the rdf file"
-
-                return job_result
+            turtle_file.file.close()
 
         except Exception as e:
-
+            log.error(e)
             job_result['status'] = "Failed"
             job_result['Error'] = str(e)
             job_result['version'] = "old"
@@ -262,8 +261,6 @@ def convertToRDF(resource_id, datasetid, vocabulary_namespace, data_namespace, p
         return job_result
 
     def conversion_for_new_jstat_version():
-
-        losd = LocalCKAN()
 
         scheme = [
             '@prefix qb: <http://purl.org/linked-data/cube#> .'
@@ -295,12 +292,10 @@ def convertToRDF(resource_id, datasetid, vocabulary_namespace, data_namespace, p
 
         scheme.append('\n\n#SCHEME\n\n')
 
-        # Generating Scheme
-
-        unit_index = source_json['id'].index('Units')
-        n1 = len(field_nms)
-
         try:
+            # Generating Scheme
+            unit_index = source_json['id'].index('Units')
+            n1 = len(field_nms)
 
             # Scheme: Individual terms
 
@@ -433,33 +428,24 @@ def convertToRDF(resource_id, datasetid, vocabulary_namespace, data_namespace, p
             turtle_file = NamedTemporaryFile(suffix='.ttl', delete=True)
 
             with open(turtle_file.name, 'w') as out_file:
-
                 out_file.write("".join(scheme))
                 out_file.write(''.join(code_list))
                 out_file.write(''.join(observations))
+                out_file.close()
 
-            try:
-                losd.action.resource_create(
-                    package_id=pkg_id,
-                    format='rdf',
-                    name='RDF ' + str(datasetid),
-                    description='RDF file converted from Json-Stat resource: ' + resource_jsonstat['name'],
-                    upload=open(turtle_file.name)
-                )
+            log.info("Creating a rdf resource")
+            toolkit.get_action("resource_create")(context, {
+                "package_id": pkg_id,
+                "format": "rdf",
+                "name": 'RDF ' + str(datasetid),
+                "description": 'RDF file converted from Json-Stat resource: ' + resource_jsonstat['name'],
+                "upload": FileStorage(open(turtle_file.name), str(uuid.uuid4()))
+            })
 
-                turtle_file.file.close()
-
-            except Exception as e:
-
-                job_result['status'] = "Failed"
-                job_result['Error'] = str(e)
-                job_result['version'] = "New"
-                job_result['Message'] = "Something went while uploading the rdf file"
-
-                return job_result
+            turtle_file.file.close()
 
         except Exception as e:
-
+            log.error(e)
             job_result['status'] = "Failure"
             job_result['Error'] = str(e)
             job_result['version'] = "New"

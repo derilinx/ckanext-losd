@@ -1,6 +1,7 @@
 from flask import Blueprint, make_response
 from ckanext.losd import views_model
 from ckan.plugins import toolkit
+import ckan.lib.helpers as h
 import logging
 
 log = logging.getLogger(__name__)
@@ -28,6 +29,7 @@ def convert_to_rdf_view(package_type, id, resource_id):
 def convert_json_state_to_rdf_view(package_type, id, resource_id):
     result = views_model.convert_json_state_to_rdf(id, resource_id)
     log.info(result)
+    h.flash_success(result.get("message", "Something went wrong"))
     return toolkit.redirect_to('{}.read'.format(package_type), id=id)
 
 
