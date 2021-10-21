@@ -3,6 +3,7 @@ from ckan.common import c
 import ckan.model as model
 import ckan.lib.jobs as jobs
 import ckan.lib.helpers as h
+from werkzeug import FileStorage
 from ckanext.losd import jsonstatToRDF_conv as RdfConv
 from pyjstat import pyjstat
 import requests
@@ -105,7 +106,7 @@ def convert_to_csv(id, resource_id):
         "format": "csv",
         "name": 'csv ' + resource_jsonstat.get('name', ''),
         "decription": 'CSV file converted from json-stat resource:' + resource_jsonstat.get('name', ''),
-        "upload": open(filename)
+        "upload": FileStorage(open(filename), str(uuid.uuid4()))
     })
     os.remove(filename)
     return {
@@ -171,7 +172,7 @@ def convert_to_rdf(id, resource_id):
             "format": "rdf",
             "name": _title or 'rdf ' + resource_csv.get('name', ''),
             "description": 'RDF file converted using JUMA from CSV resource:' + resource_csv.get('name', ''),
-            "upload": open(filename)
+            "upload": FileStorage(open(filename), str(uuid.uuid4()))
         })
 
     os.remove(filename)
