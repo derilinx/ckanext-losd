@@ -193,7 +193,7 @@ def convert_json_state_to_rdf(id, resource_id):
     data_namespace = toolkit.request.params.get('DataNmSpace', u'') or toolkit.request.form.get('DataNmSpace', u'')
     result = RdfConv.convertToRDF(resource_id, datasetid, vocabulary_namespace, data_namespace, id)
     message = "Something went wrong"
-    if result and "Message" in result:
+    if result:
         message = result.get('Message', "")
     return {
         "message": toolkit._(message),

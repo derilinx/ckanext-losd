@@ -45,6 +45,15 @@ def namespace_vocabspace_validator(nm_space):
     return nm_space
 
 
+def parse_error_message(e):
+    msg = "Something went wrong"
+    if e.message:
+        msg = e.message
+    elif e.args:
+        msg = e.args[0]
+    return "Problem with source data: {}".format(msg)
+
+
 def convertToRDF(resource_id, datasetid, vocabulary_namespace, data_namespace, pkg_id):
 
     """ This is used to call a specific function based on the version of json stat source."""
@@ -89,10 +98,11 @@ def convertToRDF(resource_id, datasetid, vocabulary_namespace, data_namespace, p
         code_list = ['#CODELIST\n\n']
         observations = ['#OBSERVATIONS\n\n']
 
-        dataset_label = source_json['dataset']['label']
-        dataset_source = source_json['dataset']['source']
-        dataset_updated = source_json['dataset']['updated']
-        dimensions = source_json['dataset']['dimension']
+        _dataset = source_json.get('dataset', {})
+        dataset_label = _dataset.get('label', "No label in source data")
+        dataset_source = _dataset.get('source', "Data doesnt have source")
+        dataset_updated = _dataset.get('updated', "No updated date")
+        dimensions = _dataset.get('dimension', {})
 
         # Building prefix
 
@@ -249,8 +259,7 @@ def convertToRDF(resource_id, datasetid, vocabulary_namespace, data_namespace, p
             job_result['status'] = "Failed"
             job_result['Error'] = str(e)
             job_result['version'] = "old"
-            job_result['Message'] = "Something went wrong in the parsing jsonstat to rdf"
-
+            job_result['Message'] = parse_error_message(e)
             return job_result
 
         job_result['status'] = "Success"
@@ -276,13 +285,12 @@ def convertToRDF(resource_id, datasetid, vocabulary_namespace, data_namespace, p
         code_list = ['#CODELIST\n\n']
         observations = ['#OBSERVATIONS\n\n']
 
-
-        dataset_label = source_json['label']
-        dataset_source = source_json['source']
-        dataset_updated = source_json['updated']
-        dimensions = source_json['dimension']
-        dataset_values = source_json['value']
-        field_nms = source_json['id']
+        dataset_label = source_json.get('label', "No label in source data")
+        dataset_source = source_json.get('source', "Data doesnt have source")
+        dataset_updated = source_json.get('updated', "No updated date")
+        dimensions = source_json.get('dimension', {})
+        dataset_values = source_json.get('value', "")
+        field_nms = source_json.get('id', "no-id")
 
         #### Building prefix
 
@@ -449,7 +457,7 @@ def convertToRDF(resource_id, datasetid, vocabulary_namespace, data_namespace, p
             job_result['status'] = "Failure"
             job_result['Error'] = str(e)
             job_result['version'] = "New"
-            job_result['Message'] = "Something went wrong in parsing the json-stat to RDF"
+            job_result['Message'] = parse_error_message(e)
 
             return job_result
 
@@ -463,12 +471,9 @@ def convertToRDF(resource_id, datasetid, vocabulary_namespace, data_namespace, p
     # Check for the version of the json-stat file
 
     if "version" in source_json.keys():
-
-        conversion_for_new_jstat_version()
-
+        return conversion_for_new_jstat_version()
     else:
-
-        conversion_for_old_jstat_version()
+        return conversion_for_old_jstat_version()
 
 
 
